@@ -204,16 +204,19 @@ export class SyncEngine {
 
   /** Single sync attempt. Concurrent calls coalesce onto the in-flight run. */
   async run(): Promise<SyncResult | null> {
+    // Guard is claimed SYNCHRONOUSLY, before any await: otherwise two calls
+    // racing through the async prologue could both start a sync and double
+    // upload the same queue.
     if (this.running) return null;
-    if (!this.isOnline) {
-      const pending = await countPending().catch(() => 0);
-      if (pending > 0) {
-        console.info(`[sync] offline — ${pending} statements queued`);
-      }
-      return null;
-    }
     this.running = true;
     try {
+      if (!this.isOnline) {
+        const pending = await countPending().catch(() => 0);
+        if (pending > 0) {
+          console.info(`[sync] offline — ${pending} statements queued`);
+        }
+        return null;
+      }
       const result = await this.runOnce();
       this.emit(result);
       if (result.ok) {

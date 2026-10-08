@@ -11,7 +11,7 @@
  * No network access happens here. Ever.
  */
 
-import { mergeProgress, enqueueStatement, type ProgressPatch } from '../db/client';
+import { mergeCheckpoints, mergeProgress, enqueueStatement, type ProgressPatch } from '../db/client';
 import { progressKey, type XapiQueueRecord } from '../db/schema';
 import { getDeviceId } from './deviceId';
 
@@ -118,6 +118,104 @@ function isoNow(now: number): string {
   return new Date(now).toISOString();
 }
 
+/**
+ * Canonical checkpoint keys — MUST stay in sync with the server's
+ * `apps/server/src/sync/crdt.ts` PROGRESS_KEYS.
+ */
+export const CHECKPOINT_KEYS = {
+  completionStatus: 'completion.status',
+  completionRank: { not_started: 0, in_progress: 1, completed: 2 } as const,
+  lastCard: 'lesson.last_card',
+  timeOnTaskMs: 'time_on_task.ms',
+} as const;
+
+/**
+ * The CRDT registers the client pushes on every sync. Only **idempotent**
+ * register ops are emitted here:
+ *  - `completion.status` — `put` carrying the status RANK; the server merges
+ *    it monotonically, so completion can never regress.
+ *  - `lesson.last_card` — `log-reading` (monotonic max).
+ *
+ * Additive registers (`time_on_task.ms`, quiz counts) are deliberately NOT
+ * emitted client-side: the client store keeps one row per key and cannot hold
+ * independent increments, and re-sending an accumulated total would
+ * double-count. The server derives those from the statements themselves,
+ * deduplicating by statement id, which is exactly equivalent and safe.
+ */
+export function buildCheckpointsFor(
+  statement: XapiStatement,
+  studentId: string,
+  lessonId: string,
+  now: number,
+): import('../db/schema').CheckpointRecord[] {
+  const verb = statement.verb.id;
+  const base = {
+    student_id: studentId,
+    lesson_id: lessonId,
+    acknowledged: 0 as const,
+    ts: now,
+  };
+  const records: import('../db/schema').CheckpointRecord[] = [];
+
+  if (verb.endsWith('/attempted')) {
+    records.push({
+      ...base,
+      id: checkpointRowId(CHECKPOINT_KEYS.completionStatus, studentId, lessonId),
+      key: CHECKPOINT_KEYS.completionStatus,
+      value: CHECKPOINT_KEYS.completionRank.in_progress,
+      op: 'put',
+      source_statement_id: statement.id,
+    });
+  }
+
+  if (verb.endsWith('/completed')) {
+    records.push({
+      ...base,
+      id: checkpointRowId(CHECKPOINT_KEYS.completionStatus, studentId, lessonId),
+      key: CHECKPOINT_KEYS.completionStatus,
+      value: CHECKPOINT_KEYS.completionRank.completed,
+      op: 'put',
+      source_statement_id: statement.id,
+    });
+  }
+
+  if (verb.endsWith('/experienced')) {
+    const cardMatch = statement.object.id.match(/\/card\/(\d+)(?:\/|$)/);
+    if (cardMatch?.[1]) {
+      records.push({
+        ...base,
+        id: checkpointRowId(CHECKPOINT_KEYS.lastCard, studentId, lessonId),
+        key: CHECKPOINT_KEYS.lastCard,
+        value: Number(cardMatch[1]),
+        op: 'log-reading',
+        source_statement_id: statement.id,
+      });
+    }
+  }
+
+  return records;
+}
+
+function checkpointRowId(key: string, studentId: string, lessonId: string): string {
+  return `${studentId}::${lessonId}::${key}`;
+}
+
+/** Parses an xAPI ISO-8601 duration back into milliseconds (0 if unparseable). */
+export function parseIsoDuration(duration: string | undefined): number {
+  if (!duration) return 0;
+  const match = duration.match(
+    /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/,
+  );
+  if (!match) return 0;
+  const [, days, hours, minutes, seconds] = match;
+  const ms =
+    Number(days ?? 0) * 86_400_000 +
+    Number(hours ?? 0) * 3_600_000 +
+    Number(minutes ?? 0) * 60_000 +
+    Number(seconds ?? 0) * 1_000;
+  return Number.isFinite(ms) ? Math.round(ms) : 0;
+}
+
 async function persist(
   statement: XapiStatement,
   now: number,
@@ -136,6 +234,12 @@ async function persist(
   };
   // Queue write first: even if the progress merge fails, the event is safe.
   await enqueueStatement(record);
+  // Maintain the local CRDT registers the sync engine will push. Merging is
+  // idempotent, so a failed/partial persist simply re-merges later.
+  const checkpoints = buildCheckpointsFor(statement, studentId, lessonId, now);
+  if (checkpoints.length > 0) {
+    await mergeCheckpoints(checkpoints);
+  }
   if (progressPatch) {
     await mergeProgress(studentId, lessonId, progressPatch, now);
   }

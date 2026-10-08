@@ -335,21 +335,41 @@ export async function mergeCheckpoints(records: CheckpointRecord[]): Promise<voi
   await withStore(STORES.checkpoints, 'readwrite', async (store) => {
     await Promise.all(
       records.map(async (incoming) => {
-        const existing = (await req(store.get(incoming.id) as IDBRequest<CheckpointRecord | undefined>)) ?? null;
+        const existing =
+          (await req(store.get(incoming.id) as IDBRequest<CheckpointRecord | undefined>)) ?? null;
         if (!existing) {
           await req(store.put(incoming));
           return;
         }
-        // Same total-order rule as the server: newer (ts, source) wins.
+        if (incoming.source_statement_id === existing.source_statement_id) {
+          // Exact same operation: nothing new to learn.
+          return;
+        }
+        // Mirrors the server CRDT exactly (apps/server/src/sync/crdt.ts).
+        if (incoming.op === 'log-reading' || incoming.key === 'completion.status') {
+          // Monotonic registers: value can only grow; ts only advances.
+          const nextValue = Math.max(existing.value, incoming.value);
+          const nextTs = Math.max(existing.ts, incoming.ts);
+          const incomingWins = incoming.value > existing.value;
+          await req(
+            store.put({
+              ...existing,
+              value: nextValue,
+              ts: nextTs,
+              source_statement_id: incomingWins
+                ? incoming.source_statement_id
+                : existing.source_statement_id,
+              // winner's op phrasing is cosmetic; keep the stable one
+              op: incomingWins ? incoming.op : existing.op,
+            }),
+          );
+          return;
+        }
+        // put (and any future additive op): total order on (ts, source).
         const incomingKey = `${incoming.ts}|${incoming.source_statement_id}`;
         const existingKey = `${existing.ts}|${existing.source_statement_id}`;
         if (incomingKey > existingKey) {
-          await req(store.put(incoming));
-        } else if (incoming.op === 'log-reading' || incoming.op === 'count-inc') {
-          // These ops only grow — keep the larger observed value.
-          if (incoming.value > existing.value) {
-            await req(store.put({ ...incoming, acknowledged: existing.acknowledged }));
-          }
+          await req(store.put({ ...incoming, acknowledged: existing.acknowledged }));
         }
       }),
     );

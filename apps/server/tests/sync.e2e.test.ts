@@ -211,7 +211,7 @@ describe('POST /api/v1/sync/progress', () => {
         method: 'POST',
         url: '/api/v1/sync/progress',
         payload: batch.raw,
-        headers: { 'content-type': 'application/json', ...batch.headers },
+        headers: batch.headers,
       });
       expect(response.statusCode).toBe(200);
     }
@@ -252,7 +252,7 @@ describe('POST /api/v1/sync/progress', () => {
         method: 'POST',
         url: '/api/v1/sync/progress',
         payload: batch.raw,
-        headers: { 'content-type': 'application/json', ...batch.headers },
+        headers: batch.headers,
       });
       expect(response.statusCode).toBe(200);
     }
@@ -277,7 +277,7 @@ describe('delta pull', () => {
       method: 'POST',
       url: '/api/v1/sync/progress',
       payload: fromA.raw,
-      headers: { 'content-type': 'application/json', ...fromA.headers },
+      headers: fromA.headers,
     });
 
     // Device B connects for the first time.
@@ -290,7 +290,7 @@ describe('delta pull', () => {
       method: 'POST',
       url: '/api/v1/sync/progress',
       payload: fromB.raw,
-      headers: { 'content-type': 'application/json', ...fromB.headers },
+      headers: fromB.headers,
     });
     const pulled = bResponse.json().pull.statements.map((s: { id: string }) => s.id);
     expect(pulled).toContain('from-a');
@@ -302,7 +302,7 @@ describe('delta pull', () => {
       method: 'POST',
       url: '/api/v1/sync/progress',
       payload: fromA2.raw,
-      headers: { 'content-type': 'application/json', ...fromA2.headers },
+      headers: fromA2.headers,
     });
     const aPulled = aResponse.json().pull.statements.map((s: { id: string }) => s.id);
     expect(aPulled).toContain('from-b');

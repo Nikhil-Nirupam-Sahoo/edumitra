@@ -82,15 +82,21 @@ export function mergeRegister(
     return { applied: true, reason: existing ? 'increment' : 'new', state: next };
   }
 
-  if (incoming.op === 'log-reading') {
-    // Monotonic max: a stale device can never lower a reading, and an old
-    // operation never blocks a newer one from advancing the timestamp.
+  // Monotonic registers: explicit log-readings AND the completion-status key.
+  // Completion is a domain invariant (not_started ≤ in_progress ≤ completed):
+  // it must never regress, even if a peer that only *started* the lesson syncs
+  // after a peer that completed it (the classic multi-device lockout).
+  const monotonic =
+    incoming.op === 'log-reading' || incoming.key === PROGRESS_KEYS.completionStatus;
+
+  if (monotonic) {
     if (existing && incoming.sourceStatementId === existing.sourceStatementId) {
       return { applied: false, reason: 'duplicate', state: existing };
     }
-    const value = round6(Math.max(existing?.value ?? Number.NEGATIVE_INFINITY, incoming.value));
-    const ts2 = Math.max(existing?.ts ?? 0, ts);
-    if (existing && existing.value === value && existing.ts >= ts2) {
+    const existingWins = existing !== undefined && existing.value > incoming.value;
+    const value = round6(existingWins ? existing.value : incoming.value);
+    const nextTs = Math.max(ts, existing?.ts ?? 0);
+    if (existing && existing.value === value && existing.ts >= nextTs) {
       return { applied: false, reason: 'stale', state: existing };
     }
     return {
@@ -98,12 +104,11 @@ export function mergeRegister(
       reason: existing ? 'newer' : 'new',
       state: {
         value,
-        ts: ts2,
-        op: 'log-reading',
-        sourceStatementId:
-          existing && existing.value > incoming.value
-            ? existing.sourceStatementId
-            : incoming.sourceStatementId,
+        ts: nextTs,
+        op: existingWins ? existing.op : incoming.op,
+        sourceStatementId: existingWins
+          ? existing.sourceStatementId
+          : incoming.sourceStatementId,
       },
     };
   }

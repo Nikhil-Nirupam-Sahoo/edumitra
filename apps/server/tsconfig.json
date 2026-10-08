@@ -9,7 +9,6 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "outDir": "dist",
-    "rootDir": "src",
     "sourceMap": true,
     "declaration": false,
     "skipLibCheck": true,
