@@ -109,7 +109,13 @@ export function mergeRegister(
   }
 
   if (existing) {
-    const order = operationOrder(incoming, existing);
+    // Compare clamped timestamps on BOTH sides: `ts` already folded in
+    // `storedAt`, so comparing a raw client ts against a clamped server ts
+    // would wrongly reject every operation that arrives after earlier ones.
+    const order = operationOrder(
+      { ts, sourceStatementId: incoming.sourceStatementId },
+      existing,
+    );
     if (order < 0) return { applied: false, reason: 'stale', state: existing };
     if (order === 0) return { applied: false, reason: 'duplicate', state: existing };
   }
