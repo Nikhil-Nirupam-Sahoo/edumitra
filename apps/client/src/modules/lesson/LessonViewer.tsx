@@ -1,11 +1,13 @@
 /**
- * LessonViewer — the offline cmi5/xAPI lesson renderer.
+ * LessonViewer — the offline cmi5/xAPI lesson renderer with gamification.
  *
  * Responsibilities:
  *  - Loads lesson content straight from the local IndexedDB cache. No fetch.
  *  - Renders micro-learning cards (text / image / audio / quiz / summary).
  *  - Fires xAPI events on lesson start, card changes and quiz submissions
  *    through `xapiLogger` (which writes to the persistent queue).
+ *  - Awards XP, updates streaks, stars, badges, quests via the gamification engine.
+ *  - Shows instant feedback: XP bursts, combo pill, confetti, sounds.
  *  - Audio-assisted overlay controls for low-literacy students.
  *  - Keyboard + screen-reader accessible; works at 320px width.
  */
@@ -23,6 +25,10 @@ import {
 import type { LessonCard, LessonContent, QuizCard } from './lessonModel';
 import { parseLessonContent } from './lessonModel';
 import { mediaUrl, useAudioCues } from './useAudioCues';
+import { useGamification, type XpGain } from '../../gamification/store';
+import { XpBurst } from '../rewards/XpBurst';
+import { CelebrationOverlay } from '../rewards/CelebrationOverlay';
+import { playCorrect, playWrong } from '../../gamification/sfx';
 
 export interface LessonViewerProps {
   lessonId: string;
@@ -50,11 +56,17 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
   const { t } = useMemo(() => createTranslator(locale), [locale]);
   const audio = useAudioCues();
 
+  // Gamification
+  const { state: gameState, recordQuizAnswer, recordCardRead, recordLessonComplete, status: gameStatus } = useGamification(studentId);
+
   const [load, setLoad] = useState<LoadState>(DEFAULT_LOAD);
   const [cardIndex, setCardIndex] = useState(0);
   const [attempts, setAttempts] = useState<Record<string, QuizAttempt>>({});
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [celebration, setCelebration] = useState<XpGain | null>(null);
+  const [burst, setBurst] = useState<{ xp: number; combo: number; key: number; x: number; y: number } | null>(null);
+  const [sessionXp, setSessionXp] = useState(0);
 
   const sessionStartRef = useRef<number>(Date.now());
   const cardEnteredAtRef = useRef<number>(Date.now());
@@ -110,9 +122,9 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
     return correct / quizCards.length;
   }, [quizCards, attempts]);
 
-  // ---- Emit card-view events + time-on-task ------------------------------
+  // ---- Emit card-view events + time-on-task + gamification card_read ------
   useEffect(() => {
-    if (load.status !== 'ready' || !card) return;
+    if (load.status !== 'ready' || !card || gameStatus !== 'ready') return;
     const enteredAt = Date.now();
     cardEnteredAtRef.current = enteredAt;
     return () => {
@@ -122,9 +134,12 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
         void logCardViewed(studentId, lessonId, cardIndex, dwellMs, {
           language: load.content?.language ?? locale,
         }).catch((error) => console.error('[lesson] card log failed', error));
+
+        // Gamification: record card read (deduped in engine)
+        void recordCardRead({ studentId, lessonId, cardId: card.id }).catch(console.error);
       }
     };
-  }, [cardIndex, card, load.status, load.content?.language, studentId, lessonId, locale]);
+  }, [cardIndex, card, load.status, load.content?.language, studentId, lessonId, locale, gameStatus, recordCardRead]);
 
   // ---- Navigation ----------------------------------------------------------
   const goToCard = useCallback(
@@ -152,15 +167,22 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
     [studentId, lessonId, load.content?.language, locale],
   );
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     const isLast = cardIndex >= cards.length - 1;
     if (isLast) {
-      void completeLesson(finalScore);
+      await completeLesson(finalScore);
+      // Record gamification for lesson completion
+      const gain = await recordLessonComplete({ studentId, lessonId, score: finalScore });
+      if (gain) {
+        setSessionXp((prev) => prev + gain.xp);
+        setCelebration(gain);
+        return; // Celebration overlay will call onExit
+      }
       onExit?.();
       return;
     }
     goToCard(cardIndex + 1);
-  }, [cardIndex, cards.length, completeLesson, finalScore, goToCard, onExit]);
+  }, [cardIndex, cards.length, completeLesson, finalScore, goToCard, onExit, recordLessonComplete]);
 
   // ---- Quiz submission -----------------------------------------------------
   const submitAnswer = useCallback(
@@ -184,9 +206,31 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
       } catch (error) {
         console.error('[lesson] answer log failed', error);
       }
+
+      // Gamification: record quiz answer
+      const gain = await recordQuizAnswer({
+        studentId,
+        lessonId,
+        questionId: quiz.questionId,
+        correct: isCorrect,
+      });
+      if (gain) {
+        setSessionXp((prev) => prev + gain.xp);
+        // Position burst near the submit button (approximate center-bottom)
+        setBurst({ xp: gain.xp, combo: gain.combo, key: Date.now(), x: window.innerWidth / 2, y: window.innerHeight * 0.7 });
+        // Sound
+        if (isCorrect) playCorrect(gain.combo);
+        else playWrong();
+      }
     },
-    [selectedOption, studentId, lessonId, load.content?.language, locale],
+    [selectedOption, studentId, lessonId, load.content?.language, locale, recordQuizAnswer],
   );
+
+  // ---- Dismiss celebration -> exit lesson ----------------------------------
+  const dismissCelebration = useCallback(() => {
+    setCelebration(null);
+    onExit?.();
+  }, [onExit]);
 
   // ---- Render states -------------------------------------------------------
   if (load.status === 'loading') {
@@ -215,11 +259,27 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
 
   return (
     <div className="lesson-viewer">
+      {/* Celebration overlay (modal) */}
+      {celebration && (
+        <CelebrationOverlay
+          gain={celebration}
+          state={gameState}
+          locale={locale}
+          onClose={dismissCelebration}
+        />
+      )}
+
       <header className="lesson-header">
-        <button type="button" className="btn btn-ghost" onClick={onExit}>
+        <button type="button" className="btn btn-ghost" onClick={onExit} disabled={!!celebration}>
           ← {t('nav.back')}
         </button>
         <h1 className="lesson-title">{load.lesson?.title}</h1>
+        {/* Combo pill */}
+        {gameState.currentCombo >= 2 && (
+          <span className="combo-pill" aria-label={t('combo.pill', { combo: gameState.currentCombo })}>
+            {t('combo.fire')} {t('combo.pill', { combo: gameState.currentCombo })}
+          </span>
+        )}
         <span className="lesson-progress" aria-label={t('common.progress')}>
           {progressPercent}
         </span>
@@ -261,6 +321,9 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
             <p className="score-line">
               {t('lesson.you_scored', { percent: Math.round(finalScore * 100) })}
             </p>
+            {sessionXp > 0 && (
+              <p className="session-xp-line">{t('celebration.xp', { xp: sessionXp })} this lesson</p>
+            )}
           </div>
         )}
       </main>
@@ -270,14 +333,19 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
           type="button"
           className="btn btn-secondary"
           onClick={() => goToCard(cardIndex - 1)}
-          disabled={cardIndex === 0}
+          disabled={cardIndex === 0 || !!celebration}
         >
           {t('common.previous')}
         </button>
-        <button type="button" className="btn btn-primary" onClick={handleNext}>
+        <button type="button" className="btn btn-primary" onClick={handleNext} disabled={!!celebration}>
           {isLastCard ? t('lesson.finish') : t('common.next')}
         </button>
       </footer>
+
+      {/* XP burst toast */}
+      {burst && (
+        <XpBurst key={burst.key} xp={burst.xp} combo={burst.combo} x={burst.x} y={burst.y} onEnd={() => setBurst(null)} />
+      )}
     </div>
   );
 }
@@ -414,7 +482,7 @@ function QuizBody({
           className={attempt.isCorrect ? 'feedback feedback-correct' : 'feedback feedback-wrong'}
           role="status"
         >
-          {attempt.isCorrect ? `✓ ${t('common.correct')}` : `✗ ${t('common.incorrect')}`}
+          {attempt.isCorrect ? `✓ {t('common.correct')}` : `✗ {t('common.incorrect')}`}
           {quiz.explanation && <span className="feedback-explanation"> {quiz.explanation}</span>}
         </p>
       )}

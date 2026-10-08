@@ -12,11 +12,12 @@ import type {
   StudentProgressRecord,
   StudentRecord,
   XapiQueueRecord,
+  XpEvent,
   CompletionStatus,
 } from './schema';
 
 const DB_NAME = 'edumitra';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export const STORES = {
   lessons: 'lessons',
@@ -25,6 +26,7 @@ export const STORES = {
   xapiQueue: 'xapi_queue',
   checkpoints: 'checkpoints',
   meta: 'meta',
+  xpEvents: 'xp_events',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -73,6 +75,10 @@ export function openDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORES.meta)) {
         db.createObjectStore(STORES.meta, { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains(STORES.xpEvents)) {
+        const xp = db.createObjectStore(STORES.xpEvents, { keyPath: 'id' });
+        xp.createIndex('by-student', 'student_id', { unique: false });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -374,6 +380,35 @@ export async function mergeCheckpoints(records: CheckpointRecord[]): Promise<voi
       }),
     );
   });
+}
+
+// ---------------------------------------------------------------------------
+// Gamification events (append-only XP log)
+// ---------------------------------------------------------------------------
+
+/**
+ * Idempotent `put`-based append: re-writing an event with the same `id` is a
+ * no-op merge (the survival rule of the sync engine), so replaying an offline
+ * session never double-counts rewards.
+ */
+export async function appendXpEvents(events: XpEvent[]): Promise<void> {
+  if (events.length === 0) return;
+  return withStore(STORES.xpEvents, 'readwrite', async (store) => {
+    await Promise.all(events.map((event) => req(store.put(event))));
+  });
+}
+
+export async function getXpEvents(studentId: string): Promise<XpEvent[]> {
+  return withStore(STORES.xpEvents, 'readonly', async (store) => {
+    const index = store.index('by-student');
+    const cursor = await req(index.getAll(IDBKeyRange.only(studentId)) as IDBRequest<XpEvent[]>);
+    return cursor.sort((a, b) => a.created_at - b.created_at);
+  });
+}
+
+/** Every student's events — used for class leaderboards (bounded by class size). */
+export async function getAllXpEvents(): Promise<XpEvent[]> {
+  return getAll<XpEvent>(STORES.xpEvents);
 }
 
 // ---------------------------------------------------------------------------

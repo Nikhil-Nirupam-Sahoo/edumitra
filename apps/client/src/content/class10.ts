@@ -1,0 +1,568 @@
+/**
+ * Class 10 syllabus — Math, Science, Social Science, English.
+ * Exam-year depth: four lessons per major subject building on Classes 8-9.
+ */
+
+import { quizCard, summaryCard, textCard, type SeedLesson } from './types';
+
+export const CLASS_10_LESSONS: SeedLesson[] = [
+  // ------------------------------------------------------------------ Math
+  {
+    id: 'c10-math-real-numbers',
+    title: 'Real Numbers',
+    grade: 10,
+    subject: 'math',
+    cards: [
+      textCard(
+        'c1',
+        'Euclid\u2019s division lemma',
+        'For any positive integers a and b, we can write a = bq + r where 0 ≤ r < b. Repeating this — Euclid\u2019s division algorithm — finds the HCF of two numbers. The FUNDAMENTAL THEOREM OF ARITHMETIC says every composite number factorises uniquely into primes (order aside).',
+      ),
+      textCard(
+        'c2',
+        'HCF, LCM and irrationality',
+        'For two numbers: HCF × LCM = a × b. A decimal expansion terminates only if the denominator has only 2s and 5s as primes — otherwise it repeats forever. And √2, √3, √5 are irrational: they cannot equal any fraction.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'What is the HCF of 24 and 36?',
+        ['6', '12', '24', '72'],
+        1,
+        'Prime factors: 24 = 2³·3 and 36 = 2²·3². HCF takes lowest powers: 2²·3 = 12.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'If HCF(a, b) = 5 and LCM(a, b) = 60, then a × b = …',
+        ['12', '300', '65', '55'],
+        1,
+        'HCF × LCM = a × b = 5 × 60 = 300.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'Which of these is irrational?',
+        ['√7', '0.25', '9/16', '0.333…'],
+        0,
+        '√7 is not a perfect square and cannot be written as a fraction → irrational. The others are rational.',
+      ),
+      summaryCard(
+        'c6',
+        'a = bq + r (0 ≤ r < b). Unique prime factorisation. HCF × LCM = a × b. √2, √3, √5 are irrational.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-math-quadratic-equations',
+    title: 'Quadratic Equations',
+    grade: 10,
+    subject: 'math',
+    cards: [
+      textCard(
+        'c1',
+        'ax² + bx + c = 0',
+        'A quadratic equation is any equation in the form ax² + bx + c = 0 with a ≠ 0. Solve by FACTORING (split the middle term) or by the QUADRATIC FORMULA: x = [−b ± √(b² − 4ac)] / 2a.',
+      ),
+      textCard(
+        'c2',
+        'The discriminant decides',
+        'D = b² − 4ac is the discriminant. D > 0 → two distinct real roots; D = 0 → two equal roots; D < 0 → no real roots. Word problems turn into quadratics naturally — a rectangle\u2019s area, a projectile\u2019s height.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'The roots of x² − 5x + 6 = 0 are…',
+        ['2 and 3', '−2 and −3', '1 and 6', '0 and 5'],
+        0,
+        'Factor: (x − 2)(x − 3) = 0 → x = 2 or x = 3.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'The discriminant of x² − 4x + 4 = 0 is…',
+        ['Positive', 'Zero', 'Negative', '6'],
+        1,
+        'D = (−4)² − 4·1·4 = 16 − 16 = 0 → two equal real roots (x = 2, twice).',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'For x² + 2x + 5 = 0, the discriminant is negative. The equation has…',
+        ['Two distinct real roots', 'Two equal real roots', 'No real roots', 'One root'],
+        2,
+        'D = 4 − 20 = −16 < 0 → no real roots (the graph never touches the x-axis).',
+      ),
+      summaryCard(
+        'c6',
+        'x = [−b ± √D]/2a with D = b² − 4ac. D>0: two roots; D=0: equal roots; D<0: no real roots.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-math-trigonometry',
+    title: 'Introduction to Trigonometry',
+    grade: 10,
+    subject: 'math',
+    cards: [
+      textCard(
+        'c1',
+        'Ratios of a right triangle',
+        'For an angle A in a right triangle: sin A = opposite ÷ hypotenuse, cos A = adjacent ÷ hypotenuse, tan A = opposite ÷ adjacent. The reciprocals: cosec A = 1/sin A, sec A = 1/cos A, cot A = 1/tan A. Also tan A = sin A ÷ cos A.',
+      ),
+      textCard(
+        'c2',
+        'Standard values & identities',
+        'Memorise the key angles: sin 30° = 1/2, sin 45° = 1/√2, sin 60° = √3/2; cos 0° = 1, tan 45° = 1, tan 60° = √3. Golden identity: sin²A + cos²A = 1, so 1 − cos²A = sin²A. Trigonometry measures heights you cannot reach — using angles of elevation and depression.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'sin 30° = …',
+        ['1', '1/2', '√3/2', '2'],
+        1,
+        'For a 30-60-90 triangle the side opposite 30° is half the hypotenuse, so sin 30° = 1/2.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'tan 45° = …',
+        ['0', '1/√2', '1', '√3'],
+        2,
+        'In a 45-45-90 triangle opposite = adjacent, so tan 45° = 1.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'Simplify: 1 − cos²A = …',
+        ['sin²A', 'cos²A', 'tan²A', '1 + sin A'],
+        0,
+        'From sin²A + cos²A = 1 rearrange: 1 − cos²A = sin²A.',
+      ),
+      summaryCard(
+        'c6',
+        'sin = opp/hyp, cos = adj/hyp, tan = opp/adj. Standard angles 0°,30°,45°,60°,90°. sin²A + cos²A = 1.',
+      ),
+    ],
+  },
+
+  // ---------------------------------------------------------------- Science
+  {
+    id: 'c10-sci-chemical-reactions',
+    title: 'Chemical Reactions & Equations',
+    grade: 10,
+    subject: 'science',
+    cards: [
+      textCard(
+        'c1',
+        'New substances appear',
+        'In a chemical reaction, reactants change into new substances (products) with different properties. Signs: colour change, gas bubbles, a precipitate, or heat/light. Equations must be BALANCED — atoms are conserved, never created or destroyed.',
+      ),
+      textCard(
+        'c2',
+        'Kinds of reactions',
+        'COMBINATION: 2Mg + O₂ → 2MgO. DECOMPOSITION: CaCO₃ →(heat) CaO + CO₂. DISPLACEMENT: more reactive metal replaces another. DOUBLE DISPLACEMENT: ions swap partners, often making a precipitate. Redox reactions combine oxidation and reduction. Corrosion (rusting) and rancidity (stale oil) are slow reactions food producers fight with antioxidants and coatings.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'Which is an example of a combination reaction?',
+        ['2Mg + O₂ → 2MgO', 'CaCO₃ → CaO + CO₂', 'H₂O → H₂ + O₂', 'Fe + CuSO₄ → FeSO₄ + Cu'],
+        0,
+        'Two reactants (magnesium and oxygen) join to form ONE product.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'On heating, calcium carbonate decomposes to…',
+        ['CaO + CO₂', 'Ca + CO₂', 'CaCO₃ does not decompose', 'Ca(OH)₂'],
+        0,
+        'CaCO₃ →(heat) CaO (quicklime) + CO₂ (carbon dioxide).',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'Oil and fat products turn rancid when they…',
+        ['Get oxidised in air', 'Are heated briefly', 'Are frozen', 'Absorb water perfectly'],
+        0,
+        'Rancidity is the oxidation of fats/oils. Antioxidants slow it down.',
+      ),
+      summaryCard(
+        'c6',
+        'Balanced equations conserve atoms. Types: combination, decomposition, displacement, double displacement, redox.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-sci-life-processes',
+    title: 'Life Processes',
+    grade: 10,
+    subject: 'science',
+    cards: [
+      textCard(
+        'c1',
+        'Keeping life running',
+        'Life processes keep organisms alive: nutrition, respiration, transportation, excretion. Plants are AUTOTROPHIC — photosynthesis makes glucose: 6CO₂ + 6H₂O →(light) C₆H₁₂O₆ + 6O₂. Animals and fungi are HETEROTROPHIC — they eat others\u2019 food.',
+      ),
+      textCard(
+        'c2',
+        'Respiration & transport',
+        'AEROBIC respiration uses oxygen and releases more energy (about 36 ATP); ANAEROBIC respiration (in muscles during hard work, or yeast) releases less. Humans transport with blood: the heart\u2019s double circulation pumps oxygenated and deoxygenated blood. The kidneys, full of nephrons, filter waste into urine; plants transpire through stomata.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'The food made by photosynthesis is stored by plants as…',
+        ['Starch', 'Chlorophyll', 'Carbon dioxide', 'Oxygen'],
+        0,
+        'Glucose is quickly stored as starch in leaves, roots and seeds.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'Compared with anaerobic respiration, aerobic respiration releases…',
+        ['Much more energy (ATP)', 'Less energy', 'No energy', 'Only heat, no ATP'],
+        0,
+        'Aerobic respiration fully breaks down glucose → about 36 ATP; anaerobic gives just 2.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'The nephron is the working unit of the…',
+        ['Lungs', 'Kidney', 'Heart', 'Stomach'],
+        1,
+        'Each kidney holds about a million nephrons that filter the blood and form urine.',
+      ),
+      summaryCard(
+        'c6',
+        'Nutrition (photosynthesis), respiration (aerobic > anaerobic), transportation (blood, nephrons, stomata), excretion.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-sci-light',
+    title: 'Light: Reflection & Refraction',
+    grade: 10,
+    subject: 'science',
+    cards: [
+      textCard(
+        'c1',
+        'Bouncing and bending',
+        'REFLECTION: light bounces off a surface — angle of incidence ALWAYS equals angle of reflection. A plane mirror makes a virtual, same-size, laterally inverted image. Concave mirrors converge (torch reflectors), convex mirrors spread out (vehicle side mirrors). Mirror formula: 1/f = 1/v + 1/u.',
+      ),
+      textCard(
+        'c2',
+        'Lenses and the eye',
+        'REFRACTION bends light when it changes medium. Convex lenses CONVERGE (magnifying glass), concave lenses DIVERGE. Lens power P = 1/f (unit: dioptre). The human eye focuses with a lens; MYOPIA (short sight) is corrected with a concave lens, HYPERMETROPIA (long sight) with a convex lens.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'If a light ray strikes a mirror at 40° to the normal, it reflects at…',
+        ['40°', '50°', '80°', '140°'],
+        0,
+        'The law of reflection: angle of incidence = angle of reflection = 40°.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'A convex lens is also called a ___ lens.',
+        ['Diverging', 'Converging', 'Reflecting', 'Flat'],
+        1,
+        'Convex lenses bend light rays together (converge) — used in magnifiers and cameras.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'Myopia (short-sightedness) is corrected with which lens?',
+        ['Convex lens', 'Concave lens', 'Cylindrical lens', 'No lens is needed'],
+        1,
+        'A concave lens spreads rays slightly so the image falls on the retina, not in front of it.',
+      ),
+      summaryCard(
+        'c6',
+        'i = r. Concave converges, convex diverges (or vice-versa for mirrors!). Myopia → concave lens; hypermetropia → convex lens.',
+      ),
+    ],
+  },
+
+  // -------------------------------------------------------------------- SST
+  {
+    id: 'c10-sst-development',
+    title: 'Development',
+    grade: 10,
+    subject: 'sst',
+    cards: [
+      textCard(
+        'c1',
+        'More than just income',
+        'Development means progress towards a better life. Income matters, but people also value security, education, good health, respect and a clean environment. Two citizens may have different (but reasonable) ideas of development — development is judged by what people actually need.',
+      ),
+      textCard(
+        'c2',
+        'HDI and sustainability',
+        'The Human Development Index (HDI) ranks countries on income plus life expectancy plus education. A very high-income country can still rank low if health and education lag. SUSTAINABLE development meets today\u2019s needs without stealing from the future — protecting resources, water and climate for the children of tomorrow.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'Besides income, the HDI also measures…',
+        ['Only population', 'Health (life expectancy) and education', 'Only factory output', 'Number of roads'],
+        1,
+        'HDI = income + life expectancy + education levels.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'Sustainable development means…',
+        ['Using everything today', 'Meeting present needs without harming future generations', 'Stopping all development', 'Only building factories'],
+        1,
+        'Development must balance today\u2019s needs with tomorrow\u2019s ability to meet theirs.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'Why is development not the same for everyone?',
+        ['People value different goals like security and dignity', 'Only income can define it', 'It is the same for all nations', 'It only depends on the weather'],
+        0,
+        'Different people face different needs — income, health, safety, freedom — so development must respect diverse goals.',
+      ),
+      summaryCard(
+        'c6',
+        'Development = income + health + education + dignity + sustainability. HDI ranks on income, life expectancy and education.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-sst-sectors-economy',
+    title: 'Sectors of the Indian Economy',
+    grade: 10,
+    subject: 'sst',
+    cards: [
+      textCard(
+        'c1',
+        'Three ways to make a living',
+        'PRIMARY sector: nature-based work — farming, fishing, mining. SECONDARY sector: manufacturing and construction. TERTIARY sector: services — banking, transport, IT, teaching. Gross Domestic Product (GDP) totals the value of goods and services a country produces in a year.',
+      ),
+      textCard(
+        'c2',
+        'Where India stands',
+        'Most Indians still work in the PRIMARY sector, but it contributes only a small share of GDP — too many people on too little land. The TERTIARY sector now contributes the largest share of GDP and is growing fastest. Work is ORGANISED (regular jobs, benefits) or UNORGANISED (casual, little protection); ownership is PUBLIC (government) or PRIVATE.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'Banking belongs to which sector?',
+        ['Primary', 'Secondary', 'Tertiary', 'None'],
+        2,
+        'Services like banking, transport and teaching are tertiary-sector activities.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'Today, the LARGEST share of India\u2019s GDP comes from…',
+        ['Agriculture', 'Manufacturing', 'Services', 'Mining'],
+        2,
+        'The tertiary (services) sector contributes over half of India\u2019s GDP.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'An enterprise owned by the government belongs to the…',
+        ['Private sector', 'Public sector', 'Primary sector', 'Organised sector'],
+        1,
+        'Public-sector enterprises (like Indian Railways) are owned by the government.',
+      ),
+      summaryCard(
+        'c6',
+        'Primary = nature, Secondary = industry, Tertiary = services. GDP = national output. India: most workers in primary, most GDP from services.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-sst-federalism',
+    title: 'Federalism',
+    grade: 10,
+    subject: 'sst',
+    cards: [
+      textCard(
+        'c1',
+        'Two levels of government',
+        'FEDERALISM is a system with two or more levels of government: a national (union) government and state governments, each with its own powers. India is large and diverse — federalism lets states govern themselves while the union handles national matters.',
+      ),
+      textCard(
+        'c2',
+        'The three lists & Panchayati Raj',
+        'India\u2019s constitution splits subjects into the UNION list (defence, foreign affairs, currency), the STATE list (police, agriculture, health) and the CONCURRENT list (education, forests — both levels act). Power also goes DOWN to villages: PANCHAYATI RAJ — gram panchayat → block samiti → zilla parishad — plus municipalities for towns.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'Which subject belongs to the Union List?',
+        ['Police', 'Defence', 'Agriculture', 'Health'],
+        1,
+        'Defence, foreign affairs, currency and railways are national subjects on the Union List.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'The lowest level of the Panchayati Raj is the…',
+        ['Zilla parishad', 'Gram panchayat', 'Block samiti', 'Municipal corporation'],
+        1,
+        'Gram panchayats govern villages; block samitis and zilla parishads sit above them.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'Education appears on which list?',
+        ['Union List', 'State List only', 'Concurrent List', 'No list'],
+        2,
+        'Both centre and states make laws on Concurrent List subjects such as education and forests.',
+      ),
+      summaryCard(
+        'c6',
+        'Federalism = union + states with divided powers (Union, State, Concurrent lists). Decentralisation → Panchayati Raj & municipalities.',
+      ),
+    ],
+  },
+
+  // --------------------------------------------------------------- English
+  {
+    id: 'c10-en-clauses',
+    title: 'Clauses',
+    grade: 10,
+    subject: 'english',
+    cards: [
+      textCard(
+        'c1',
+        'Building blocks of sentences',
+        'A clause is a group of words with a subject and a verb. A MAIN clause can stand alone; a SUBORDINATE clause leans on it. "Although it rained, we went out" — we went out is main; Although it rained is subordinate.',
+      ),
+      textCard(
+        'c2',
+        'Types of subordinate clauses',
+        'NOUN clauses act as nouns (What he said shocked us). RELATIVE (adjective) clauses describe nouns: the book THAT I read, the teacher WHO taught me. ADVERBIAL clauses tell when/why/how: because I was late, when winter comes. which/that → things, who/whom → people, when/where → time and place.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'Identify the MAIN clause: "Although it rained, we went out."',
+        ['Although it rained', 'We went out', 'Although it', 'Rained we went'],
+        1,
+        '"We went out" is the independent clause; "Although it rained" is subordinate.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        '"The book that I read was gripping." Here "that I read" is a…',
+        ['Relative clause', 'Main clause', 'Noun phrase', 'Prepositional phrase'],
+        0,
+        'The relative clause "that I read" tells us which book — describing the noun.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'Which relative pronoun is correct: "The singer ___ concert we attended was brilliant."',
+        ['who', 'whom', 'whose', 'which'],
+        2,
+        '"Whose" shows possession — the singer\u2019s concert.',
+      ),
+      summaryCard(
+        'c6',
+        'Main + subordinate clauses. Relative (which/who/whose), noun and adverbial clauses each lift a sentence.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-en-determiners',
+    title: 'Determiners: A, Some, Much…',
+    grade: 10,
+    subject: 'english',
+    cards: [
+      textCard(
+        'c1',
+        'Little words that point to nouns',
+        'Determiners come before nouns: articles (a, an, the), demonstratives (this, these), possessives (my, your), quantifiers (some, any, much, many, few, little). They answer "which one?" and "how much or how many?".',
+      ),
+      textCard(
+        'c2',
+        'Choosing correctly',
+        'Use A before consonant sounds and AN before vowel sounds: a book, an apple, an hour (h is silent). SOME for positive/offer, ANY for negatives and questions: I have some sugar; do you have any? MUCH for uncountable (much water), MANY for countable (many students). FEW = almost none; A FEW = some.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        '___ apple a day keeps the doctor away.',
+        ['A', 'An', 'The', 'No determiner'],
+        1,
+        '"Apple" begins with a vowel sound → "an apple".',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'How ___ sugar do you need?',
+        ['many', 'much', 'few', 'several'],
+        1,
+        'Sugar is uncountable → use "much" for amount.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'He has very ___ friends, so he feels lonely.',
+        ['a few', 'few', 'many', 'some'],
+        1,
+        '"Few" means almost none (a negative idea); "a few" means some.',
+      ),
+      summaryCard(
+        'c6',
+        'a/an/the, this/that, my/your, some/any, much/many, few/little. Vowel sounds take an; uncountable nouns take much.',
+      ),
+    ],
+  },
+  {
+    id: 'c10-en-tenses',
+    title: 'Tenses Review: Clauses and Time',
+    grade: 10,
+    subject: 'english',
+    cards: [
+      textCard(
+        'c1',
+        'Tenses in complex sentences',
+        'When clauses join, tenses follow logic. Main clause past pulls dependent clauses back: He said he would come (future → would). Sequence of tenses: present → present, past → past, past → past perfect for earlier actions.',
+      ),
+      textCard(
+        'c2',
+        'Mixed conditionals & practice',
+        'Real past + unreal present: If he had studied, he would be a doctor now. Real present + unreal past: If she were smarter, she would have solved it. Avoid mixing would into the if-clause — keep it clean.',
+      ),
+      quizCard(
+        'c3',
+        'q1',
+        'He said, "I will finish it." → He said that he ___ finish it.',
+        ['will', 'would', 'shall', 'should'],
+        1,
+        'Future "will" backsteps to "would" in reported speech.',
+      ),
+      quizCard(
+        'c4',
+        'q2',
+        'If I ___ (know) earlier, I would have told you.',
+        ['know', 'knew', 'had known', 'have known'],
+        2,
+        'Third conditional (unreal past): if + past perfect.',
+      ),
+      quizCard(
+        'c5',
+        'q3',
+        'If she were taller, she ___ reach the shelf.',
+        ['can', 'could', 'will', 'would'],
+        1,
+        'Second conditional (unreal present): if + past, would/could + base.',
+      ),
+      summaryCard(
+        'c6',
+        'Reported speech backsteps tenses. Mixed conditionals combine real and unreal times — keep would out of the if-clause.',
+      ),
+    ],
+  },
+];

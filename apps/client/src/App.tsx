@@ -5,8 +5,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { seedIfEmpty } from './db/seed';
-import { getAllProgress, getLessons } from './db/client';
-import type { LessonRecord } from './db/schema';
+import { getAllStudents } from './db/client';
+import type { StudentRecord } from './db/schema';
 import {
   detectInitialLocale,
   LOCALE_STORAGE_KEY,
@@ -18,8 +18,16 @@ import { LessonViewer } from './modules/lesson/LessonViewer';
 import { TeacherDashboard } from './modules/dashboard/TeacherDashboard';
 import { SettingsPanel } from './modules/settings/SettingsPanel';
 import { getSyncEngine } from './sync/syncEngine';
+import { HomeScreen } from './modules/home/HomeScreen';
+import { RewardsPanel } from './modules/rewards/RewardsPanel';
+import { resetGamificationStore } from './gamification/store';
 
-type Route = { name: 'home' } | { name: 'lesson'; lessonId: string } | { name: 'teacher' } | { name: 'settings' };
+type Route =
+  | { name: 'home' }
+  | { name: 'lesson'; lessonId: string }
+  | { name: 'teacher' }
+  | { name: 'settings' }
+  | { name: 'rewards' };
 
 function parseRoute(hash: string): Route {
   const path = hash.replace(/^#\/?/, '');
@@ -29,7 +37,13 @@ function parseRoute(hash: string): Route {
   }
   if (path === 'teacher') return { name: 'teacher' };
   if (path === 'settings') return { name: 'settings' };
+  if (path === 'rewards') return { name: 'rewards' };
   return { name: 'home' };
+}
+
+function classIdToGrade(classId: string): number | null {
+  const m = classId.match(/class-(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
 }
 
 export function App() {
@@ -41,9 +55,7 @@ export function App() {
     typeof navigator === 'undefined' ? true : navigator.onLine,
   );
   const [ready, setReady] = useState(false);
-  const [studentId, setStudentId] = useState('student-asha');
-  // The demo student selector is intentionally tiny; production builds map the
-  // signed-in student to this id from the pairing flow.
+  const [studentId, setStudentId] = useState('student-aarav');
   const { t } = useMemo(() => createTranslator(locale), [locale]);
 
   // ---- Boot: seed local content, start sync, wire connectivity -----------
@@ -96,6 +108,22 @@ export function App() {
     }
   }, []);
 
+  // Load students for RewardsPanel leaderboard class filtering
+  const [students, setStudents] = useState<StudentRecord[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    getAllStudents().then((s) => {
+      if (!cancelled) setStudents(s);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Find current student's class
+  const currentStudent = students.find((s) => s.id === studentId);
+  const currentClassId = currentStudent?.class_id ?? 'class-8-a';
+
   return (
     <div className="app">
       <div className={`connectivity-bar ${online ? 'online' : 'offline'}`} role="status">
@@ -112,19 +140,31 @@ export function App() {
           onExit={() => navigate({ name: 'home' })}
         />
       ) : route.name === 'teacher' ? (
-        <TeacherDashboard locale={locale} />
+        <TeacherDashboard locale={locale} students={students} />
       ) : route.name === 'settings' ? (
         <SettingsPanel
           locale={locale}
           onLocaleChange={changeLocale}
-          onDataReset={() => navigate({ name: 'home' })}
+          onDataReset={() => {
+            resetGamificationStore();
+            navigate({ name: 'home' });
+          }}
+        />
+      ) : route.name === 'rewards' ? (
+        <RewardsPanel
+          studentId={studentId}
+          studentName={currentStudent?.name ?? 'Student'}
+          locale={locale}
+          classId={currentClassId}
+          onClose={() => navigate({ name: 'home' })}
         />
       ) : (
         <HomeScreen
           locale={locale}
           studentId={studentId}
-          onStudentChange={setStudentId}
-          onOpenLesson={(lessonId) => navigate({ name: 'lesson', lessonId })}
+          studentName={currentStudent?.name ?? 'Student'}
+          classId={currentClassId}
+          onLessonSelect={(lessonId) => navigate({ name: 'lesson', lessonId })}
         />
       )}
 
@@ -135,6 +175,13 @@ export function App() {
           onClick={() => navigate({ name: 'home' })}
         >
           📚 {t('nav.lessons')}
+        </button>
+        <button
+          type="button"
+          className={route.name === 'rewards' ? 'active' : ''}
+          onClick={() => navigate({ name: 'rewards' })}
+        >
+          🏆 {t('nav.rewards')}
         </button>
         <button
           type="button"
@@ -151,119 +198,6 @@ export function App() {
           ⚙️ {t('nav.settings')}
         </button>
       </nav>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Home: lesson list read from the local cache with resume state
-// ---------------------------------------------------------------------------
-
-interface HomeScreenProps {
-  locale: LocaleCode;
-  studentId: string;
-  onStudentChange: (studentId: string) => void;
-  onOpenLesson: (lessonId: string) => void;
-}
-
-interface LessonListItem {
-  lesson: LessonRecord;
-  completionStatus: string;
-  score: number;
-  lastCardIndex: number;
-}
-
-const STUDENT_CHOICES = [
-  { id: 'student-asha', label: 'Asha Kumari' },
-  { id: 'student-ravi', label: 'Ravi Prasad' },
-  { id: 'student-meena', label: 'Meena Devi' },
-  { id: 'student-arjun', label: 'Arjun Singh' },
-];
-
-function HomeScreen({ locale, studentId, onStudentChange, onOpenLesson }: HomeScreenProps) {
-  const { t } = useMemo(() => createTranslator(locale), [locale]);
-  const [items, setItems] = useState<LessonListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const lessons = await getLessons();
-      const progressRows = await getAllProgress();
-      if (cancelled) return;
-      const byLesson = new Map(
-        progressRows
-          .filter((row) => row.student_id === studentId)
-          .map((row) => [row.lesson_id, row]),
-      );
-      setItems(
-        lessons.map((lessonRecord) => {
-          const progress = byLesson.get(lessonRecord.id);
-          return {
-            lesson: lessonRecord,
-            completionStatus: progress?.completion_status ?? 'not_started',
-            score: progress?.score ?? -1,
-            lastCardIndex: progress?.last_card_index ?? 0,
-          };
-        }),
-      );
-      setLoading(false);
-    })().catch((error) => {
-      console.error('[home] failed to load lessons', error);
-      if (!cancelled) setLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [studentId]);
-
-  return (
-    <div className="home">
-      <header className="home-header">
-        <h1>{t('app.name')}</h1>
-        <p className="muted">{t('app.tagline')}</p>
-        <label className="field">
-          <span>{t('settings.student')}</span>
-          <select value={studentId} onChange={(event) => onStudentChange(event.target.value)}>
-            {STUDENT_CHOICES.map((choice) => (
-              <option key={choice.id} value={choice.id}>
-                {choice.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </header>
-
-      {loading ? (
-        <p className="muted">{t('common.loading')}</p>
-      ) : items.length === 0 ? (
-        <p className="muted">{t('lesson.no_lessons')}</p>
-      ) : (
-        <ul className="lesson-list">
-          {items.map(({ lesson: lessonRecord, completionStatus, score, lastCardIndex }) => (
-            <li key={lessonRecord.id}>
-              <button
-                type="button"
-                className="lesson-list-item"
-                onClick={() => onOpenLesson(lessonRecord.id)}
-              >
-                <span className="lesson-list-title">{lessonRecord.title}</span>
-                <span className="lesson-list-meta muted">
-                  {lessonRecord.language.toUpperCase()}
-                  {completionStatus === 'completed' && ` · ✓ ${t('common.completed')}`}
-                  {score >= 0 && ` · ${formatPercent(score)}`}
-                  {completionStatus === 'in_progress' && ` · ${t('lesson.resume')}`}
-                  {completionStatus === 'not_started' && ` · ${t('lesson.start')}`}
-                </span>
-                {lastCardIndex > 0 && completionStatus !== 'completed' && (
-                  <span className="lesson-list-resume">↻</span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

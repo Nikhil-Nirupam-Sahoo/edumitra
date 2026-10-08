@@ -11,6 +11,7 @@ import { clearAllData, countPending, countSynced, estimateStorage } from '../../
 import { createTranslator, SUPPORTED_LOCALES, type LocaleCode } from '../../i18n';
 import { getSyncEngine, type SyncResult } from '../../sync/syncEngine';
 import { getDeviceId } from '../../sync/deviceId';
+import { isSoundEnabled, setSoundEnabled } from '../../gamification/sfx';
 
 export interface SettingsPanelProps {
   locale: LocaleCode;
@@ -38,6 +39,13 @@ export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsP
   const [online, setOnline] = useState<boolean>(
     typeof navigator === 'undefined' ? true : navigator.onLine,
   );
+  const [soundOn, setSoundOn] = useState(isSoundEnabled());
+
+  const toggleSound = useCallback(() => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+  }, [soundOn]);
 
   const refreshCounts = useCallback(async () => {
     const [pending, synced, storage] = await Promise.all([
@@ -146,6 +154,18 @@ export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsP
         <p className="muted">
           {counts.pending} pending · {counts.synced} synced
         </p>
+      </section>
+
+      <section className="panel">
+        <h2>{t('settings.sound')}</h2>
+        <label className="toggle-field">
+          <input
+            type="checkbox"
+            checked={soundOn}
+            onChange={toggleSound}
+          />
+          <span>{t('settings.sound')}</span>
+        </label>
       </section>
 
       <section className="panel">

@@ -2,18 +2,20 @@
  * TeacherDashboard — fully offline class analytics.
  *
  * Reads exclusively from the local IndexedDB cache (student_progress,
- * students, attendance) via `db/queries.ts`. No network calls, ever. Mirrors
- * apps/client/src/modules/dashboard/TeacherDashboard.tsx in the spec.
+ * students, attendance) via `db/queries.ts`. No network calls, ever.
  *
  * Layout is optimized for a teacher's low-end phone: a compact KPI strip, then
  * a "needs support" list, then a windowed student table (renders at most 25
- * rows at a time to bound memory/DOM cost).
+ * rows at a time to bound memory/DOM cost), plus a "Class Champions" leaderboard.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getStrugglingStudents, listClasses, type ClassSummary, type StudentSummary } from '../../db/queries';
 import { getClassSummary } from '../../db/queries';
+import { getAllXpEvents } from '../../db/client';
+import { deriveGamification } from '../../gamification/engine';
 import { formatDurationShort, formatPercent, createTranslator, type LocaleCode } from '../../i18n';
+import type { StudentRecord } from '../../db/schema';
 
 const WINDOW_SIZE = 25;
 
@@ -24,6 +26,8 @@ export interface TeacherDashboardProps {
   /** Refresh cadence in ms; defaults to 30 s while mounted. */
   refreshMs?: number;
   now?: () => number;
+  /** All students (for class filter + leaderboard). */
+  students?: StudentRecord[];
 }
 
 interface DashboardState {
@@ -40,6 +44,7 @@ export function TeacherDashboard({
   initialClassId,
   refreshMs = 30_000,
   now = () => Date.now(),
+  students = [],
 }: TeacherDashboardProps) {
   const { t } = useMemo(() => createTranslator(locale), [locale]);
   const [state, setState] = useState<DashboardState>({
@@ -50,6 +55,7 @@ export function TeacherDashboard({
     struggling: [],
   });
   const [visibleCount, setVisibleCount] = useState(WINDOW_SIZE);
+  const [champions, setChampions] = useState<Array<{ id: string; name: string; weekXp: number; level: number }>>([]);
 
   const refresh = useCallback(
     async (classId?: string | null) => {
@@ -89,9 +95,33 @@ export function TeacherDashboard({
     [now],
   );
 
+  // Load class champions (weekly XP leaderboard)
+  const refreshChampions = useCallback(async (classId: string) => {
+    const classStudents = students.filter((s) => s.class_id === classId);
+    if (classStudents.length === 0) {
+      setChampions([]);
+      return;
+    }
+    const allEvents = await getAllXpEvents();
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const leaderboard = classStudents
+      .map((peer) => {
+        const peerEvents = allEvents.filter((e) => e.student_id === peer.id && e.created_at >= weekAgo);
+        const peerState = deriveGamification(peerEvents, Date.now());
+        return { id: peer.id, name: peer.name, weekXp: peerState.weekXp, level: peerState.level };
+      })
+      .sort((a, b) => b.weekXp - a.weekXp)
+      .slice(0, 5);
+    setChampions(leaderboard);
+  }, [students]);
+
   useEffect(() => {
     void refresh(initialClassId ?? null);
   }, [refresh, initialClassId]);
+
+  useEffect(() => {
+    if (state.classId) void refreshChampions(state.classId);
+  }, [refreshChampions, state.classId]);
 
   useEffect(() => {
     if (refreshMs <= 0) return;
@@ -230,6 +260,21 @@ export function TeacherDashboard({
             {t('common.next')} (+{Math.min(WINDOW_SIZE, summary.students.length - visibleCount)})
           </button>
         )}
+      </section>
+
+      {/* Class Champions leaderboard (weekly XP) */}
+      <section className="panel" aria-label={t('dashboard.champions')}>
+        <h2>{t('dashboard.champions')}</h2>
+        <ol className="leaderboard-list">
+          {champions.map((champ, i) => (
+            <li key={champ.id} className="leaderboard-item">
+              <span className="leaderboard-rank">{i + 1}</span>
+              <span className="leaderboard-name">{champ.name}</span>
+              <span className="leaderboard-xp">{champ.weekXp} XP · L{champ.level}</span>
+            </li>
+          ))}
+        </ol>
+        {champions.length === 0 && <p className="muted">{t('dashboard.no_data')}</p>}
       </section>
     </div>
   );
