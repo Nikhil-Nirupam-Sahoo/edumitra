@@ -38,20 +38,41 @@ jobs:
         run: docker build -t edumitra-ci .
       - name: Boot and smoke-test
         run: |
+          # Job logs need admin access to read, so on failure surface the
+          # diagnostics through check annotations instead (public API).
+          fail() {
+            local info="$1
+          --- docker ps -a ---
+          $(docker ps -a 2>&1)
+          --- container log tail ---
+          $(docker logs edumitra 2>&1 | tail -20)"
+            local msg=${info//%/%25}
+            msg=${msg//$'\r'/%0D}
+            msg=${msg//$'\n'/%0A}
+            echo "::error::$msg"
+            exit 1
+          }
+
           docker run -d --name edumitra \
             -e SYNC_SIGNING_SECRET=ci-secret-at-least-16-chars \
-            -p 4600:4600 edumitra-ci
+            -p 4600:4600 edumitra-ci || fail "docker run failed to start the container"
+
           # Wait for the health endpoint (container healthcheck + boot delay).
+          up=""
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:4600/api/v1/health >/dev/null; then break; fi
+            if curl -fsS http://localhost:4600/api/v1/health >/dev/null; then up=1; break; fi
             sleep 2
           done
-          curl -fsS http://localhost:4600/api/v1/health
+          [ -n "$up" ] || fail "health endpoint never became ready within 60s"
+
+          curl -fsS http://localhost:4600/api/v1/health || fail "health endpoint returned an error"
           echo
           # The PWA must be served same-origin, and API 404s stay JSON.
-          curl -fsS http://localhost:4600/ | grep -qi "<!doctype html>"
-          curl -fsS http://localhost:4600/deep/route | grep -qi "<!doctype html>"
-          curl -fsS http://localhost:4600/api/v1/nope | grep -q "not_found"
+          curl -fsS http://localhost:4600/ | grep -qi "<!doctype html>" || fail "root is not serving the PWA shell"
+          curl -fsS http://localhost:4600/deep/route | grep -qi "<!doctype html>" || fail "SPA fallback is broken"
+          # NOTE: deliberately no -f on the next line — a 404 IS the expected
+          # status here, and -f would abort curl before the body arrives.
+          curl -sS http://localhost:4600/api/v1/nope | grep -q "not_found" || fail "API 404 response is not JSON"
           docker logs edumitra
 
   client:
