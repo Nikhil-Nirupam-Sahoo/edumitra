@@ -1,0 +1,52 @@
+# ---------------------------------------------------------------------------
+# EduMitra — production-shaped stack: Fastify sync API + PostgreSQL.
+#
+#   cp .env.example .env          # then set SYNC_SIGNING_SECRET & DB_PASSWORD
+#   docker compose up --build -d
+#
+# The server runs DB migrations automatically on boot, so a fresh database
+# volume is enough — no manual migration step.
+# ---------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: edumitra
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me-in-production}
+      POSTGRES_DB: edumitra
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U edumitra -d edumitra']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  server:
+    build:
+      context: ./apps/server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: '4600'
+      DB_DRIVER: postgres
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: edumitra
+      DB_USER: edumitra
+      DB_PASSWORD: ${DB_PASSWORD:-change-me-in-production}
+      # The server refuses to boot in production with the built-in dev
+      # secret — override this in .env (openssl rand -hex 32).
+      SYNC_SIGNING_SECRET: ${SYNC_SIGNING_SECRET:-compose-dev-secret-change-me-0123456789}
+      SYNC_SIGNATURE_MAX_SKEW_MS: ${SYNC_SIGNATURE_MAX_SKEW_MS:-300000}
+      REDIS_URL: ${REDIS_URL:-}
+    ports:
+      - '4600:4600'
+
+volumes:
+  pgdata:

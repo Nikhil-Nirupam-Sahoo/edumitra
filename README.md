@@ -30,3 +30,20 @@ npm run build     # server tsc build + client tsc + vite build
 ```
 
 Environment template: `.env.example` (never commit a real `.env`).
+
+## Deploy (Docker)
+
+The server ships a multi-stage `apps/server/Dockerfile` (build → prod-deps-only
+runner, non-root, health-checked at `/api/v1/health`), and the repo root has a
+`docker-compose.yml` that pairs it with PostgreSQL 16:
+
+```bash
+cp .env.example .env
+# set SYNC_SIGNING_SECRET=$(openssl rand -hex 32) and a real DB_PASSWORD
+docker compose up --build -d
+curl http://localhost:4600/api/v1/health
+```
+
+Migrations run automatically on boot; the `pgdata` volume is enough for
+persistence. The PWA client builds to static files (`npm run build` in
+`apps/client`) and can be hosted on any static host or CDN in front of the API.
