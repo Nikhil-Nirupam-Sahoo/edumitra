@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  server:
+    name: Server (Fastify sync API)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/server/package-lock.json
+      - name: Install
+        run: npm ci
+        working-directory: apps/server
+      - name: Typecheck
+        run: npx tsc --noEmit
+        working-directory: apps/server
+      - name: Test
+        run: npm test
+        working-directory: apps/server
+      - name: Build
+        run: npm run build
+        working-directory: apps/server
+
+  client:
+    name: Client (Vite PWA)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/client/package-lock.json
+      - name: Install
+        run: npm ci
+        working-directory: apps/client
+      - name: Typecheck
+        run: npx tsc --noEmit
+        working-directory: apps/client
+      - name: Test
+        run: npm test
+        working-directory: apps/client
+      - name: Build
+        run: npm run build
+        working-directory: apps/client
