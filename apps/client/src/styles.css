@@ -1,0 +1,473 @@
+/*
+ * EduMitra stylesheet — hand-written, no framework.
+ * Rationale: on 2G/3G and low-end CPUs, shipping ~8 KB of CSS beats shipping
+ * 300 KB of utility classes that must be parsed and applied at runtime.
+ */
+
+:root {
+  --color-bg: #f6f7fb;
+  --color-surface: #ffffff;
+  --color-text: #1b1f2a;
+  --color-muted: #5b6472;
+  --color-primary: #1d4ed8;
+  --color-primary-dark: #1e40af;
+  --color-ok: #15803d;
+  --color-warn: #b45309;
+  --color-danger: #b91c1c;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+  --font-size-base: 17px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: var(--font-size-base);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 0.75rem 5.5rem; /* bottom space for the nav bar */
+  min-height: 100vh;
+}
+
+/* ---------- Connectivity banner ---------------------------------------- */
+
+.connectivity-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  text-align: center;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+.connectivity-bar.online {
+  background: #ecfdf5;
+  color: var(--color-ok);
+}
+.connectivity-bar.offline {
+  background: #fffbeb;
+  color: var(--color-warn);
+}
+
+/* ---------- Typography -------------------------------------------------- */
+
+h1 {
+  font-size: 1.35rem;
+  margin: 0.75rem 0 0.25rem;
+}
+h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+}
+.muted {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+.warn {
+  color: var(--color-warn);
+}
+.error {
+  color: var(--color-danger);
+  font-size: 0.9rem;
+}
+.mono {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Buttons ----------------------------------------------------- */
+
+.btn {
+  font: inherit;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1rem;
+  min-height: 44px; /* touch target */
+  cursor: pointer;
+  background: var(--color-surface);
+  transition: background-color 0.15s ease;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-primary:not(:disabled):active {
+  background: var(--color-primary-dark);
+}
+.btn-secondary {
+  background: var(--color-surface);
+  border-color: #cbd5e1;
+  color: var(--color-text);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary);
+  padding-left: 0;
+}
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+.btn-audio {
+  background: #eef2ff;
+  color: var(--color-primary-dark);
+  border-color: #c7d2fe;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  min-height: 36px;
+}
+
+/* ---------- Home -------------------------------------------------------- */
+
+.home-header h1 {
+  margin-top: 1rem;
+}
+.field {
+  display: block;
+  margin: 0.5rem 0;
+}
+.field > span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+.field select {
+  font: inherit;
+  width: 100%;
+  padding: 0.55rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid #cbd5e1;
+  background: var(--color-surface);
+  min-height: 44px;
+}
+
+.lesson-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.lesson-list-item {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: var(--color-surface);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.2rem;
+  cursor: pointer;
+  position: relative;
+  min-height: 64px;
+}
+.lesson-list-title {
+  font-weight: 600;
+}
+.lesson-list-meta {
+  font-size: 0.8rem;
+}
+.lesson-list-resume {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  color: var(--color-primary);
+}
+
+/* ---------- Lesson viewer ------------------------------------------------ */
+
+.lesson-viewer {
+  padding-bottom: 1rem;
+}
+.lesson-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.lesson-title {
+  flex: 1;
+  font-size: 1.05rem;
+  margin: 0;
+}
+.lesson-progress {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+.lesson-progressbar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0.5rem 0 0.75rem;
+}
+.lesson-progressbar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s ease;
+}
+
+.lesson-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  min-height: 240px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.card-title {
+  margin: 0 0 0.5rem;
+}
+.card-text {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+.card-figure {
+  margin: 0.5rem 0;
+}
+.card-figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  background: #eef2f7;
+}
+.card-figure figcaption {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin-top: 0.25rem;
+}
+.transcript {
+  font-style: italic;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- Quiz -------------------------------------------------------- */
+
+.quiz-options {
+  border: 0;
+  padding: 0;
+  margin: 0.5rem 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 48px;
+}
+.quiz-option input {
+  accent-color: var(--color-primary);
+  width: 20px;
+  height: 20px;
+}
+.quiz-option-selected {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+}
+.quiz-option-correct {
+  border-color: var(--color-ok);
+  background: #ecfdf5;
+}
+.quiz-option-wrong {
+  border-color: var(--color-danger);
+  background: #fef2f2;
+}
+.feedback {
+  font-weight: 600;
+  margin: 0.75rem 0 0;
+}
+.feedback-correct {
+  color: var(--color-ok);
+}
+.feedback-wrong {
+  color: var(--color-danger);
+}
+.feedback-explanation {
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.lesson-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.lesson-footer .btn {
+  flex: 1;
+}
+
+/* ---------- Dashboard ---------------------------------------------------- */
+
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+@media (max-width: 420px) {
+  .kpi-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.kpi {
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem;
+  box-shadow: var(--shadow);
+  display: grid;
+}
+.kpi-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.kpi-label {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+.kpi-warn .kpi-value {
+  color: var(--color-warn);
+}
+.kpi-ok .kpi-value {
+  color: var(--color-ok);
+}
+
+.panel {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.85rem;
+  margin: 0.75rem 0;
+}
+.panel.danger {
+  border: 1px solid #fecaca;
+}
+
+.struggling-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.struggling-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.struggling-item:last-child {
+  border-bottom: 0;
+}
+.student-stats {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.student-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-muted);
+  padding: 0.3rem 0.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.student-table td {
+  padding: 0.4rem 0.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.row-warning td:first-child {
+  color: var(--color-warn);
+  font-weight: 600;
+}
+
+/* ---------- Settings ------------------------------------------------------ */
+
+.settings .panel:last-child {
+  margin-bottom: 2rem;
+}
+
+/* ---------- Bottom navigation --------------------------------------------- */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 720px;
+  background: var(--color-surface);
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 20;
+}
+.bottom-nav button {
+  flex: 1;
+  font: inherit;
+  font-size: 0.72rem;
+  background: none;
+  border: 0;
+  color: var(--color-muted);
+  padding: 0.5rem 0.25rem 0.6rem;
+  min-height: 52px;
+  cursor: pointer;
+}
+.bottom-nav button.active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.boot-loading {
+  padding: 2rem 0;
+  text-align: center;
+}

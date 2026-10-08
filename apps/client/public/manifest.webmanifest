@@ -1,0 +1,27 @@
+{
+  "name": "EduMitra Learning",
+  "short_name": "EduMitra",
+  "description": "Offline-first micro-learning for low-bandwidth classrooms",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f7fb",
+  "theme_color": "#1d4ed8",
+  "lang": "en",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

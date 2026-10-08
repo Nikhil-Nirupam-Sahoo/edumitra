@@ -1,0 +1,20 @@
+{
+  "appName": "এডুমিত্র",
+  "tagline": "ইন্টারনেট ছাড়াই যেকোনো জায়গায় শিখুন",
+  "startLesson": "পাঠ শুরু",
+  "next": "পরবর্তী",
+  "previous": "আগেরটি",
+  "listen": "শুনুন",
+  "correct": "সঠিক!",
+  "incorrect": "সঠিক নয় — আবার চেষ্টা করুন",
+  "lessonCompleted": "পাঠ সম্পন্ন",
+  "score": "স্কোর",
+  "dashboard": "শিক্ষক ড্যাশবোর্ড",
+  "totalStudents": "মোট শিক্ষার্থী",
+  "lessonsCompleted": "সম্পন্ন পাঠ",
+  "averageScore": "গড় স্কোর",
+  "activeToday": "আজ সক্রিয়",
+  "flaggedStudents": "সহায়তা প্রয়োজন",
+  "pendingEvents": "সিঙ্ক বাকি",
+  "noProgressYet": "এখনও কোনো অগ্রগতি নেই"
+}

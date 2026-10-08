@@ -1,0 +1,16 @@
+{
+  "name": "edumitra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline-first digital learning platform (xAPI + cmi5, local-first SQLite, CRDT sync)",
+  "scripts": {
+    "setup": "cd apps/client && npm install && cd ../server && npm install",
+    "dev:client": "cd apps/client && npm run dev",
+    "dev:server": "cd apps/server && npm run dev",
+    "build": "cd apps/server && npm run build && cd ../client && npm run build",
+    "start:server": "cd apps/server && npm run start",
+    "start:client": "cd apps/client && npm run preview",
+    "typecheck": "cd apps/server && npx tsc --noEmit && cd ../client && npx tsc --noEmit",
+    "test": "cd apps/server && npm test && cd ../client && npm test"
+  }
+}
