@@ -28,10 +28,10 @@ describe('DATABASE_URL', () => {
     expect(cfg.db.ssl).toBe(true);
   });
 
-  it('honours an explicit sslmode=disable', () => {
-    const cfg = load({ DATABASE_URL: 'postgresql://u:p@localhost:5432/db?sslmode=disable' });
-    expect(cfg.db.ssl).toBe(false);
-    expect(cfg.db.driver).toBe('postgres');
+  it('only enables TLS when the URL asks for it', () => {
+    expect(load({ DATABASE_URL: 'postgres://u:p@localhost:5432/db?sslmode=disable' }).db.ssl).toBe(false);
+    expect(load({ DATABASE_URL: 'postgres://u:p@localhost:5432/db' }).db.ssl).toBe(false);
+    expect(load({ DATABASE_URL: 'postgres://u:p@host:5432/db?sslmode=verify-full' }).db.ssl).toBe(true);
   });
 
   it('keeps plain DB_* configuration when no URL is present', () => {

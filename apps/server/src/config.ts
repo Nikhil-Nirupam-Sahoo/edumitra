@@ -112,8 +112,9 @@ function parseDatabaseUrl(raw: string): {
     database: decodeURIComponent(url.pathname.replace(/^\//, '')) || 'edumitra',
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
-    // PaaS URLs default to TLS; only an explicit sslmode=disable opts out.
-    ssl: url.searchParams.get('sslmode') !== 'disable',
+    // TLS only when the URL asks for it (PaaS URLs set sslmode=require; a
+    // plain URL — docker compose, embedded, local — is assumed plaintext).
+    ssl: url.searchParams.get('sslmode') !== null && url.searchParams.get('sslmode') !== 'disable',
   };
 }
 

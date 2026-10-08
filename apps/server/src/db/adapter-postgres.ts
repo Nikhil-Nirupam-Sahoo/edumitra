@@ -108,12 +108,17 @@ export class PostgresAdapter implements DbPort {
       connectionTimeoutMillis: 10_000,
       ...(options.ssl ? { ssl: { rejectUnauthorized: false } } : {}),
     });
-    this.root = new PostgresConnection({
-      query: async (sql, params) => {
-        const result = await this.pool.query(sql, params as never[]);
-        return { rows: result.rows, rowCount: result.rowCount };
+    this.root = new PostgresConnection(
+      {
+        query: async (sql, params) => {
+          const result = await this.pool.query(sql, params as never[]);
+          return { rows: result.rows, rowCount: result.rowCount };
+        },
       },
-    });
+      // Without this the root connection cannot run transactions — which
+      // migrate() needs. (Regression caught by the embedded-Postgres test.)
+      (fn) => this.transaction(fn),
+    );
   }
 
   query<T = Record<string, unknown>>(sql: string, params?: readonly unknown[]): Promise<T[]> {
