@@ -1,6 +1,4 @@
 node_modules/
 dist/
-.next/
-apps/client/public/sql-wasm.wasm
 *.log
 .env

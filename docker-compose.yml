@@ -26,7 +26,12 @@ services:
 
   server:
     build:
-      context: ./apps/server
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        # Must equal the runtime secret below — this is how the PWA bundle
+        # learns which key to sign batches with.
+        SYNC_SIGNING_SECRET: ${SYNC_SIGNING_SECRET:-compose-dev-secret-change-me-0123456789}
     restart: unless-stopped
     depends_on:
       db:

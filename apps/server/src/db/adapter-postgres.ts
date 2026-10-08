@@ -93,6 +93,9 @@ export class PostgresAdapter implements DbPort {
     user: string;
     password: string;
     poolSize: number;
+    /** TLS (DATABASE_URL sslmode=require). `rejectUnauthorized: false` matches
+     *  PaaS proxies (Render/Neon) whose certs chain to a private CA. */
+    ssl?: boolean;
   }) {
     this.pool = new Pool({
       host: options.host,
@@ -103,6 +106,7 @@ export class PostgresAdapter implements DbPort {
       max: options.poolSize,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
+      ...(options.ssl ? { ssl: { rejectUnauthorized: false } } : {}),
     });
     this.root = new PostgresConnection({
       query: async (sql, params) => {

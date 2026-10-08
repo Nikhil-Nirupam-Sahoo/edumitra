@@ -1,0 +1,8 @@
+# Build context hygiene — everything below is rebuilt inside the image.
+.git
+**/node_modules
+**/dist
+**/data
+**/*.log
+.env
+**/.env

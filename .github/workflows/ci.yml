@@ -29,6 +29,31 @@ jobs:
         run: npm run build
         working-directory: apps/server
 
+  docker:
+    name: Docker image (build + boot smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t edumitra-ci .
+      - name: Boot and smoke-test
+        run: |
+          docker run -d --name edumitra \
+            -e SYNC_SIGNING_SECRET=ci-secret-at-least-16-chars \
+            -p 4600:4600 edumitra-ci
+          # Wait for the health endpoint (container healthcheck + boot delay).
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:4600/api/v1/health >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -fsS http://localhost:4600/api/v1/health
+          echo
+          # The PWA must be served same-origin, and API 404s stay JSON.
+          curl -fsS http://localhost:4600/ | grep -qi "<!doctype html>"
+          curl -fsS http://localhost:4600/deep/route | grep -qi "<!doctype html>"
+          curl -fsS http://localhost:4600/api/v1/nope | grep -q "not_found"
+          docker logs edumitra
+
   client:
     name: Client (Vite PWA)
     runs-on: ubuntu-latest

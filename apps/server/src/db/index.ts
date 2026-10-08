@@ -22,6 +22,7 @@ export async function createDatabase(config: LoadedConfig): Promise<DbPort> {
       user: config.db.user,
       password: config.db.password,
       poolSize: config.db.poolSize,
+      ssl: config.db.ssl,
     });
   } else {
     // Tests use a fresh in-memory database; dev persists under DATA_DIR.

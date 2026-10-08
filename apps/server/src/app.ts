@@ -7,9 +7,12 @@
  * (Fastify does not decompress request bodies by itself.)
  */
 
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { brotliDecompressSync, gunzipSync, inflateSync } from 'node:zlib';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
+import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import type { LoadedConfig } from './config.js';
 import type { DbPort } from './db/index.js';
@@ -99,7 +102,38 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     { prefix: '/api/v1' },
   );
 
-  app.setNotFoundHandler(async (_request, reply) => {
+  // ---------------------------------------------------------------------
+  // Static PWA — served from the same origin as the API so the client's
+  // relative VITE_API_BASE (/api/v1) works in production with no CORS and
+  // one deployment instead of two. In dev the PWA is served by Vite, so the
+  // dist directory simply won't exist and this block is skipped.
+  // ---------------------------------------------------------------------
+  const serveStatic = existsSync(join(config.clientDist, 'index.html'));
+  if (serveStatic) {
+    await app.register(fastifyStatic, {
+      root: config.clientDist,
+      // We own Cache-Control entirely (the plugin default would override
+      // whatever setHeaders writes).
+      cacheControl: false,
+      setHeaders: (res, path) => {
+        if (path.endsWith('.html') || path.endsWith('sw.js')) {
+          res.setHeader('cache-control', 'no-cache');
+        } else if (path.includes('/assets/')) {
+          // Vite content-hashed files — safe to cache forever.
+          res.setHeader('cache-control', 'public, max-age=31536000, immutable');
+        } else {
+          res.setHeader('cache-control', 'public, max-age=86400');
+        }
+      },
+    });
+  }
+
+  app.setNotFoundHandler(async (request, reply) => {
+    // Unknown API paths stay JSON 404s; everything else gets the SPA shell
+    // (the router is hash-based, so any path can render index.html).
+    if (serveStatic && request.method === 'GET' && !request.url.startsWith('/api')) {
+      return reply.code(200).type('text/html').sendFile('index.html');
+    }
     return reply.code(404).send({ error: 'not_found' });
   });
 
