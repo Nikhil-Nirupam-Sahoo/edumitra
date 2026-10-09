@@ -219,3 +219,111 @@
 .home-load-error .btn {
   margin: 0 auto;
 }
+
+/* ==========================================================================
+   MANIM-STYLE FIGURE ANIMATIONS
+   Figures draw themselves on (Manim's `Create`), fade/rise in (`FadeIn`),
+   and travel along a path (`MoveAlongPath`).
+   ========================================================================== */
+
+/* Draw-on: stroke-dash trick, pathLength=1 normalises the dash maths. */
+.fig-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: fig-draw-on linear forwards;
+}
+
+@keyframes fig-draw-on {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Fade + slight rise, like Manim's FadeIn. */
+.fig-fade {
+  opacity: 0;
+  animation: fig-fade-in ease-out forwards;
+}
+
+@keyframes fig-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* An object travelling along its own path (motion-path). */
+.fig-travel {
+  offset-path: var(--fig-path);
+  offset-rotate: auto;
+  animation: fig-travel linear infinite;
+}
+
+@keyframes fig-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Electron orbits. */
+.fig-spin-slow {
+  transform-origin: 200px 100px;
+  animation: art-spin 16s linear infinite;
+}
+
+.fig-orbit,
+.fig-orbit-b,
+.fig-orbit-c {
+  transform-origin: 200px 100px;
+  animation: fig-orbit 3.4s linear infinite;
+}
+.fig-orbit-b {
+  animation-delay: -1.13s;
+}
+.fig-orbit-c {
+  animation-delay: -2.26s;
+}
+
+@keyframes fig-orbit {
+  from {
+    transform: rotate(0deg) translateX(92px);
+  }
+  to {
+    transform: rotate(360deg) translateX(92px);
+  }
+}
+
+/* Fallback for browsers without motion-path: the dot simply sits still
+   rather than teleporting, so the figure still reads correctly. */
+@supports not (offset-path: path('M0 0')) {
+  .fig-travel {
+    offset-path: none;
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fig-draw {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: none !important;
+  }
+  .fig-fade {
+    opacity: 1;
+    animation: none !important;
+  }
+  .fig-travel,
+  .fig-spin-slow,
+  .fig-orbit,
+  .fig-orbit-b,
+  .fig-orbit-c {
+    animation: none !important;
+  }
+}

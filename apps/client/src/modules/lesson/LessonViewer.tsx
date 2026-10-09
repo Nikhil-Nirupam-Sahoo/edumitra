@@ -312,6 +312,7 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
       {/* Animated subject scene — purely decorative, hidden from screen readers */}
       <LessonArt
         subject={(load.lesson?.subject ?? 'practice') as SyllabusSubjectId}
+        lessonId={load.lesson?.id}
         variant={artVariant}
       />
 

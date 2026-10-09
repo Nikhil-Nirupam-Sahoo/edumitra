@@ -1,18 +1,24 @@
 /**
- * LessonArt — animated SVG scenes for lessons, one per subject.
+ * LessonArt — the animated figure shown above a lesson.
  *
- * These are vector scenes animated with CSS, not bitmaps: no downloads, no
- * CDN, nothing to cache, crisp at any density, and they keep working with the
- * device fully offline. Every animation is switched off under
- * `prefers-reduced-motion` (see `art.css`).
+ * Two layers:
+ *  - a topic figure from `figures.tsx` (Manim-style diagram chosen per lesson,
+ *    e.g. a parabola for quadratic equations, a v–t graph for motion), and
+ *  - the Vice City backdrop (starfield + slitted sunset + grid).
+ *
+ * Everything is vector + CSS: no downloads, crisp at any density, and it works
+ * with the device fully offline. Animation stops under `prefers-reduced-motion`.
  */
 
 import { useMemo, type ReactElement } from 'react';
 import type { SyllabusSubjectId } from '../db/schema';
+import { figureForLesson } from './figures';
 
 export interface LessonArtProps {
   subject: SyllabusSubjectId;
-  /** Varies the scene so a subject's lessons don't all look identical. */
+  /** The lesson id — picks the topic-relevant figure. */
+  lessonId?: string;
+  /** Varies the backdrop so a subject's lessons don't all look identical. */
   variant?: number;
   className?: string;
 }
@@ -23,8 +29,8 @@ function rand(seed: number): number {
   return x - Math.floor(x);
 }
 
-export function LessonArt({ subject, variant = 0, className }: LessonArtProps) {
-  const scene = useMemo(() => ART[subject] ?? ART.practice, [subject]);
+export function LessonArt({ subject, lessonId, variant = 0, className }: LessonArtProps) {
+  const figure = useMemo(() => figureForLesson(lessonId), [lessonId]);
   const uid = `${subject}-${variant}`;
 
   return (
@@ -92,113 +98,9 @@ export function LessonArt({ subject, variant = 0, className }: LessonArtProps) {
             <line key={`v${i}`} x1={200 + (i - 4) * 46} y1="166" x2={200 + (i - 4) * 96} y2="200" />
           ))}
         </g>
-
-        {scene(uid, variant)}
+        {figure}
       </svg>
     </div>
   );
 }
 
-type Scene = (uid: string, variant: number) => ReactElement;
-
-/* ------------------------------------------------------------------ Math */
-const mathScene: Scene = (uid, variant) => {
-  const shapes = [
-    <circle key="c" cx="200" cy="86" r="30" fill="none" stroke={`url(#neon-${uid})`} strokeWidth="3" />,
-    <rect key="r" x="178" y="60" width="44" height="44" fill="none" stroke={`url(#neon-${uid})`} strokeWidth="3" />,
-    <path key="t" d="M200 52 L228 104 L172 104 Z" fill="none" stroke={`url(#neon-${uid})`} strokeWidth="3" />,
-  ];
-  return (
-    <g>
-      <g className="art-spin" style={{ transformOrigin: '200px 86px' }}>
-        {shapes[variant % shapes.length]}
-        {shapes[(variant + 1) % shapes.length]}
-      </g>
-      <g className="art-spin-slow" style={{ transformOrigin: '200px 86px' }}>
-        <circle cx="200" cy="86" r="46" fill="none" stroke="#ff2d95" strokeWidth="1.5" strokeDasharray="6 10" />
-      </g>
-      <text x="200" y="96" textAnchor="middle" fontSize="30" fontWeight="800"
-        fontStyle="italic" fill={`url(#chrome-${uid})`} className="art-pulse">
-        {['π', '∑', '√', '∞', 'Δ'][variant % 5]}
-      </text>
-    </g>
-  );
-};
-
-/* --------------------------------------------------------------- Science */
-const scienceScene: Scene = (uid, variant) => (
-  <g className="art-spin-slow" style={{ transformOrigin: '200px 86px' }}>
-    <circle cx="200" cy="86" r="9" fill="#00e5ff" className="art-pulse" />
-    <ellipse cx="200" cy="86" rx="46" ry="18" fill="none" stroke="#ff2d95" strokeWidth="2" />
-    <ellipse cx="200" cy="86" rx="46" ry="18" fill="none" stroke="#00e5ff" strokeWidth="2"
-      transform="rotate(60 200 86)" />
-    <ellipse cx="200" cy="86" rx="46" ry="18" fill="none" stroke="#ffd166" strokeWidth="2"
-      transform="rotate(120 200 86)" />
-    <circle cx="246" cy="86" r="4" fill="#ff2d95" />
-    <circle cx="177" cy="47" r="4" fill="#00e5ff" />
-    <circle cx="177" cy="125" r="4" fill="#ffd166" />
-  </g>
-);
-
-/* ------------------------------------------------------------------- SST */
-const sstScene: Scene = (uid, variant) => (
-  <g>
-    {/* Neon skyline */}
-    {Array.from({ length: 9 }, (_, i) => {
-      const w = 26 + rand(i + variant * 3 + 1) * 22;
-      const x = i * 46 - 8;
-      const h = 26 + rand(i * 5 + variant * 7 + 2) * 58;
-      return (
-        <rect key={i} x={x} y={166 - h} width={w} height={h} fill="#12042e" stroke={`url(#neon-${uid})`} strokeWidth="1.2" />
-      );
-    })}
-    <g className="art-twinkle" opacity="0.95">
-      {Array.from({ length: 12 }, (_, i) => (
-        <rect key={i} x={20 + i * 30} y={92 + rand(i + variant) * 44} width="5" height="4"
-          fill={i % 3 === 0 ? '#ff2d95' : '#00e5ff'} opacity="0.75" />
-      ))}
-    </g>
-  </g>
-);
-
-/* --------------------------------------------------------------- English */
-const englishScene: Scene = (uid, variant) => (
-  <g>
-    <g className="art-bob">
-      {['A', 'B', 'C'][variant % 3] && (
-        <text x="200" y="104" textAnchor="middle" fontSize="64" fontWeight="800"
-          fontStyle="italic" fill={`url(#chrome-${uid})`}>
-          {['A', 'B', 'C', 'R', 'S'][variant % 5]}
-        </text>
-      )}
-    </g>
-    <g opacity="0.9">
-      {Array.from({ length: 6 }, (_, i) => (
-        <text key={i} x={26 + i * 68} y={44 + rand(i + variant) * 22} fontSize="15" fontWeight="700"
-          fontStyle="italic" fill="#00e5ff" opacity="0.75" className="art-drift"
-          style={{ animationDelay: `${i * 0.5}s` }}>
-          {['a', 'e', 'i', 'o', 'u', 'y'][i]}
-        </text>
-      ))}
-    </g>
-  </g>
-);
-
-/* --------------------------------------------------------------- Practice */
-const practiceScene: Scene = (uid, variant) => (
-  <g>
-    <g className="art-spin-slow" style={{ transformOrigin: '200px 86px' }}>
-      <polygon points={`200,40 ${40 + variant * 4},130 ${360 - variant * 4},130`}
-        fill="none" stroke={`url(#neon-${uid})`} strokeWidth="3" />
-    </g>
-    <circle cx="200" cy="86" r="18" fill="none" stroke="#ff2d95" strokeWidth="2" className="art-pulse" />
-  </g>
-);
-
-const ART: Record<SyllabusSubjectId, Scene> = {
-  math: mathScene,
-  science: scienceScene,
-  sst: sstScene,
-  english: englishScene,
-  practice: practiceScene,
-};
