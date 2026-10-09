@@ -17,7 +17,7 @@ import type {
 } from './schema';
 
 const DB_NAME = 'edumitra';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 export const STORES = {
   lessons: 'lessons',
@@ -27,6 +27,10 @@ export const STORES = {
   checkpoints: 'checkpoints',
   meta: 'meta',
   xpEvents: 'xp_events',
+  /** Lesson content translated into the student's language, keyed [lesson_id, locale]. */
+  lessonI18n: 'lessons_i18n',
+  /** Synthesised read-aloud audio, keyed by a hash of text+voice. */
+  speechCache: 'speech_cache',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -79,6 +83,14 @@ export function openDb(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORES.xpEvents)) {
         const xp = db.createObjectStore(STORES.xpEvents, { keyPath: 'id' });
         xp.createIndex('by-student', 'student_id', { unique: false });
+      }
+      if (!db.objectStoreNames.contains(STORES.lessonI18n)) {
+        // Translations are discarded on a content-version bump (see
+        // syncContent) so a reworded chapter never keeps a stale translation.
+        db.createObjectStore(STORES.lessonI18n, { keyPath: ['lesson_id', 'locale'] });
+      }
+      if (!db.objectStoreNames.contains(STORES.speechCache)) {
+        db.createObjectStore(STORES.speechCache, { keyPath: 'key' });
       }
     };
     request.onsuccess = () => resolve(request.result);

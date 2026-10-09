@@ -31,6 +31,7 @@ import { CelebrationOverlay } from '../rewards/CelebrationOverlay';
 import { LessonArt } from '../../art/LessonArt';
 import { playCorrect, playWrong } from '../../gamification/sfx';
 import { useSpeech } from '../../tts/useSpeech';
+import { cardsForLocale } from '../../content/lessonTranslation';
 
 export interface LessonViewerProps {
   lessonId: string;
@@ -58,6 +59,12 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
   const { t } = useMemo(() => createTranslator(locale), [locale]);
   const audio = useAudioCues();
   const speech = useSpeech(locale);
+  /**
+   * Lesson content in the student's language. Starts as the English cards so
+   * the lesson is never blank, then upgrades once the translation arrives (or
+   * immediately from the device cache on a repeat visit).
+   */
+  const [translated, setTranslated] = useState(false);
 
   // Gamification
   const { state: gameState, recordQuizAnswer, recordCardRead, recordLessonComplete, status: gameStatus } = useGamification(studentId);
@@ -103,6 +110,34 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
       cancelled = true;
     };
   }, [lessonId, studentId]);
+
+  /**
+   * Upgrade the lesson into the student's language once it is on screen.
+   *
+   * English renders first and is replaced when (and if) a translation arrives,
+   * so opening a lesson is never blocked on the network. Re-running on `locale`
+   * means switching language mid-lesson updates the content too.
+   */
+  useEffect(() => {
+    if (load.status !== 'ready' || locale === 'en') {
+      setTranslated(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const result = await cardsForLocale(lessonId, locale);
+      if (cancelled || !result.translated) return;
+      setLoad((prev) =>
+        prev.status === 'ready' && prev.content
+          ? { ...prev, content: { ...prev.content, cards: result.cards, language: locale } }
+          : prev,
+      );
+      setTranslated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [load.status, lessonId, locale]);
 
   // ---- Fire lesson-started exactly once per mount -------------------------
   useEffect(() => {
@@ -287,6 +322,11 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
           ← {t('nav.back')}
         </button>
         <h1 className="lesson-title">{load.lesson?.title}</h1>
+        {translated && (
+          <span className="lesson-lang-badge" title={t('lesson.translated_into', { lang: locale })}>
+            {t('lesson.translated_badge')}
+          </span>
+        )}
         {/* Combo pill */}
         {gameState.currentCombo >= 2 && (
           <span className="combo-pill" aria-label={t('combo.pill', { combo: gameState.currentCombo })}>
@@ -332,10 +372,13 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
                   speech.read(`card-${card.id}`, cardReadableAloud(card) ?? '')
                 }
                 aria-pressed={speech.speakingId === `card-${card.id}`}
+                aria-busy={speech.loadingId === `card-${card.id}`}
               >
                 {speech.speakingId === `card-${card.id}`
                   ? `⏸ ${t('lesson.stop_listen')}`
-                  : `🔊 ${t('lesson.listen')}`}
+                  : speech.loadingId === `card-${card.id}`
+                    ? `${t('common.loading')}…`
+                    : `🔊 ${t('lesson.listen')}`}
               </button>
             )}
           </div>

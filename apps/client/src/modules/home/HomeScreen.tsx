@@ -71,6 +71,8 @@ export function HomeScreen({
     const grade = classIdToGrade(classId);
     return (grade as SyllabusGradeId) ?? 'practice';
   });
+  /** Subject filter; 'all' shows every subject group in the current class. */
+  const [subjectFilter, setSubjectFilter] = useState<SyllabusSubjectId | 'all'>('all');
 
   useEffect(() => {
     let cancelled = false;
@@ -108,12 +110,34 @@ export function HomeScreen({
     };
   }, [reloadToken]);
 
-  const filteredLessons = useMemo(() => {
-    if (activeTab === 'practice') {
-      return lessons.filter((l) => !l.grade);
-    }
+  const classLessons = useMemo(() => {
+    if (activeTab === 'practice') return lessons.filter((l) => !l.grade);
     return lessons.filter((l) => l.grade === activeTab);
   }, [lessons, activeTab]);
+
+  const filteredLessons = useMemo(
+    () =>
+      subjectFilter === 'all'
+        ? classLessons
+        : classLessons.filter((l) => (l.subject ?? 'practice') === subjectFilter),
+    [classLessons, subjectFilter],
+  );
+
+  /**
+   * Subjects actually present in the current class, so the dropdown never
+   * offers a filter that would show an empty screen — the most common way a
+   * filter like this becomes a dead end.
+   */
+  const availableSubjects = useMemo(() => {
+    const present = new Set<SyllabusSubjectId>();
+    for (const lesson of classLessons) present.add((lesson.subject as SyllabusSubjectId) ?? 'practice');
+    return SUBJECT_ORDER.filter((s) => present.has(s));
+  }, [classLessons]);
+
+  const filterCount = useMemo(
+    () => classLessons.filter((l) => (l.subject ?? 'practice') === subjectFilter).length,
+    [classLessons, subjectFilter],
+  );
 
   const subjectGroups = useMemo((): SubjectGroup[] => {
     const groups = new Map<SyllabusSubjectId, LessonCardView[]>();
@@ -141,6 +165,14 @@ export function HomeScreen({
     const hasPractice = lessons.some((l) => !l.grade || l.grade === 'practice');
     return hasPractice ? [...baseTabs, 'practice'] : baseTabs;
   }, [lessons]);
+
+  // Switching class can leave a subject selected that this class has no
+  // lessons for, which would render an empty screen with no way back.
+  useEffect(() => {
+    if (subjectFilter !== 'all' && !availableSubjects.includes(subjectFilter)) {
+      setSubjectFilter('all');
+    }
+  }, [availableSubjects, subjectFilter]);
 
   const currentStudent = students.find((s) => s.id === selectedStudentId) ?? { name: studentName, class_id: classId };
 
@@ -181,6 +213,29 @@ export function HomeScreen({
           </button>
         ))}
       </nav>
+
+      <div className="home-subject-filter">
+        <label htmlFor="subject-filter">{t('home.subject_filter')}</label>
+        <select
+          id="subject-filter"
+          value={subjectFilter}
+          onChange={(e) => setSubjectFilter(e.target.value as SyllabusSubjectId | 'all')}
+          disabled={availableSubjects.length === 0}
+        >
+          <option value="all">{t('home.subject_all')}</option>
+          {availableSubjects.map((s) => (
+            <option key={s} value={s}>
+              {SUBJECT_ICONS[s]} {t(`home.subject.${s}`)}
+            </option>
+          ))}
+        </select>
+        <span className="home-subject-count" aria-live="polite">
+          {subjectFilter === 'all'
+            ? classLessons.length
+            : filterCount}{' '}
+          {t('home.lessons_count')}
+        </span>
+      </div>
 
       <main className="home-main" aria-busy={loadState === 'loading'}>
         {loadState === 'loading' && <p className="muted">{t('common.loading')}</p>}

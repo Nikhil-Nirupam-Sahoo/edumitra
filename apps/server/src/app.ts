@@ -18,6 +18,8 @@ import type { LoadedConfig } from './config.js';
 import type { DbPort } from './db/index.js';
 import { registerSyncRoutes } from './sync/sync.controller.js';
 import { registerTranslateRoutes } from './translate/translate.controller.js';
+import { registerTtsRoutes } from './tts/tts.controller.js';
+import { registerContentTranslateRoutes } from './translate/content-translate.controller.js';
 import { registerContentRoutes } from './content/content.controller.js';
 import { registerSupportRoutes } from './support/support.controller.js';
 import { registerImageRoutes } from './images/images.controller.js';
@@ -118,6 +120,28 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (instance) => {
       await registerTranslateRoutes(instance, { config });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Lesson CONTENT translation, so a student who picks Odia or Hindi reads
+  // Odia or Hindi lessons rather than a translated shell around English ones.
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerContentTranslateRoutes(instance, { config });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Online text-to-speech. Same Google key as translation; the client falls
+  // back to the device's own voices when this is unavailable.
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerTtsRoutes(instance, { config });
     },
     { prefix: '/api/v1' },
   );
