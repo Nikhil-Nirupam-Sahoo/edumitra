@@ -11,6 +11,7 @@ import { createDatabase } from './db/index.js';
 import { createJobQueue } from './sync/queue.js';
 import { SyncService } from './sync/sync.service.js';
 import { AuthService } from './auth/auth.service.js';
+import { seedVideoLectures } from './video/video.seed.js';
 
 const RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -25,6 +26,10 @@ async function main(): Promise<void> {
   const created = await auth.ensureDemoUsers();
   if (created > 0) {
     console.log(`[auth] created ${created} demo user(s)`);
+  }
+  const videos = await seedVideoLectures(db);
+  if (videos > 0) {
+    console.log(`[video] seeded ${videos} lecture(s)`);
   }
   const app = await buildApp({ config, db, syncService, queue, auth });
 

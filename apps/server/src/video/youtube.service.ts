@@ -1,11 +1,16 @@
 /**
- * YouTube Data API v3 service for educational content.
+ * YouTube Data API v3 service for educational video discovery.
  *
- * Fetches video metadata, thumbnails, and caption tracks from educational
- * channels: NCERT DIKSHA, BSE Odisha, CHSE, ICSE, and other verified
- * educational channels.
+ * Two honest paths:
+ *   1. With a YOUTUBE_API_KEY we call the Data API (search.list /
+ *      videos.list) to discover and describe lectures at runtime.
+ *   2. Without a key we fall back to oEmbed (public, keyless) for the
+ *      metadata of a specific video URL we already know.
  *
- * Falls back gracefully to oEmbed if no API key is configured.
+ * We deliberately do NOT fabricate channel ids or video ids: every id
+ * either comes from the API or from the curated seed (see video.seed.ts),
+ * which pins real, verifiable lectures from NCERT, BSE Odisha, CHSE and
+ * ICSE channels.
  */
 
 import type { LoadedConfig } from '../config.js';
@@ -13,40 +18,56 @@ import type { LoadedConfig } from '../config.js';
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const OEMBED_API = 'https://www.youtube.com/oembed';
 
-/** Channels we trust for educational content (channel ID -> metadata). */
-export const EDU_CHANNELS = {
-  UC0Q6E6Q4j8K7GkY7Q7Z7Z7A: { name: 'NCERT Official', board: 'CBSE', lang: 'hi' },
-  UC1234567890abcdef: { name: 'BSE Odisha', board: 'BSE_ODISHA', lang: 'or' },
-  UC0987654321fedcba: { name: 'CHSE Odisha', board: 'CHSE', lang: 'or' },
-  UC1122334455667788: { name: 'ICSE Official', board: 'ICSE', lang: 'en' },
-  UC9988776655443322: { name: 'NCERT DIKSHA', board: 'CBSE', lang: 'hi' },
-} as const;
+/** Compressed thumbnail sizes YouTube's image server already serves. */
+export type ThumbQuality = 'mqdefault' | 'hqdefault' | 'sddefault';
 
-export interface YouTubeVideo {
-  id: string;
+/**
+ * Builds a compressed thumbnail URL for a YouTube video.
+ * `mqdefault` (320×180) is small and fast on a classroom connection;
+ * `hqdefault` is the fallback when a video has no mq frame.
+ */
+export function youtubeThumbnail(videoId: string, quality: ThumbQuality = 'mqdefault'): string {
+  return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`;
+}
+
+/** Extracts a YouTube video id from a watch / shorts / youtu.be URL. */
+export function extractYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtu.be')) {
+      const id = u.pathname.slice(1).split('/')[0];
+      return id ? id : null;
+    }
+    const v = u.searchParams.get('v');
+    if (v) return v;
+    const shorts = u.pathname.match(/\/shorts\/([^/?]+)/);
+    return shorts ? (shorts[1] ?? null) : null;
+  } catch {
+    return null;
+  }
+}
+
+export interface VideoSearchResult {
+  videoId: string;
   title: string;
-  description: string;
-  thumbnailUrl: string;
-  thumbnailWebp: string | null;
-  durationSec: number;
-  channelId: string;
   channelTitle: string;
   publishedAt: string;
-  tags: string[];
-  durationIso: string;
-  captionTracks: Array<{
-    languageCode: string;
-    name: { simpleText: string };
-    baseUrl: string;
-    kind: 'asr' | 'manual';
-  }>;
+  thumbnail: string;
+  durationSec: number | null;
 }
 
-export interface YouTubeServiceOptions {
-  config: LoadedConfig;
+export interface VideoDetails {
+  videoId: string;
+  title: string;
+  description: string;
+  channelTitle: string;
+  publishedAt: string;
+  durationSec: number;
+  thumbnail: string;
+  captionsAvailable: boolean;
 }
 
-/** Normalise ISO 8601 duration (PT1H2M3S) to seconds. */
+/** Normalise an ISO 8601 duration (PT1H2M3S) to seconds. */
 export function isoDurationToSec(iso: string): number {
   const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!match) return 0;
@@ -56,102 +77,20 @@ export function isoDurationToSec(iso: string): number {
   return h * 3600 + m * 60 + s;
 }
 
-/**
- * Convert a YouTube thumbnail URL to a compressed WebP version.
- * In production, you'd run this through an image optimisation pipeline.
- * Here we return the original URL — the client will request WebP via
- * the `format=webp` parameter if the CDN supports it, or fall back.
- */
-function toWebpThumbnail(url: string): string {
-  // YouTube thumbnails support `=w{h}-{format}` but we keep it simple.
-  return url.replace(/\.(jpg|jpeg|png)$/i, '.webp');
-}
-
-/** Build the caption track URL with format=vtt for WebVTT. */
-function captionUrl(baseUrl: string): string {
-  const u = new URL(baseUrl);
-  u.searchParams.set('fmt', 'vtt');
-  return u.toString();
-}
-
 export function createYouTubeService(config: LoadedConfig) {
-  const apiKey = config.youtubeApiKey ?? null;
+  const apiKey = config.youtubeApiKey;
 
   /**
-   * Fetch video details by YouTube video ID(s).
+   * Search YouTube for educational videos. Requires an API key; without
+   * one it returns an empty list rather than pretending to have results.
    */
-  async function fetchVideoDetails(ids: string[]): Promise<YouTubeVideo[]> {
-    if (ids.length === 0) return [];
-
-    // Batch up to 50 IDs per request (API limit).
-    const chunks: string[][] = [];
-    for (let i = 0; i < ids.length; i += 50) {
-      chunks.push(ids.slice(i, i + 50));
-    }
-
-    const results: YouTubeVideo[] = [];
-
-    for (const chunk of chunks) {
-      const idParam = chunk.join(',');
-      const url = `${YT_API}/videos?part=snippet,contentDetails,status&id=${idParam}&key=${encodeURIComponent(process.env.YOUTUBE_API_KEY || '')}`;
-
-      // If no API key, we can't use the Data API — caller should handle fallback.
-      const response = await fetch(
-        `${YT_API}/videos?part=snippet,contentDetails,status&id=${encodeURIComponent(chunk.join(','))}&key=${encodeURIComponent(process.env.YOUTUBE_API_KEY || '')}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`YouTube API error: ${response.status}`);
-      }
-
-      const payload = (await response.json()) as {
-        items?: Array<{
-          id: string;
-          snippet: { title: string; description: string; thumbnails: { maxres?: { url: string; width: number; height: number }; standard?: { url: string }; high?: { url: string }; medium?: { url: string }; default?: { url: string } }; channelId: string; channelTitle: string; publishedAt: string; tags?: string[] };
-          contentDetails: { duration: string; caption: string; licensedContent: boolean };
-          status: { uploadStatus: string; privacyStatus: string };
-        }>;
-      };
-
-      for (const item of payload.items ?? []) {
-        if (item.status?.privacyStatus !== 'public') continue;
-        if (item.status?.uploadStatus !== 'processed') continue;
-
-        const thumb = item.snippet.thumbnails.maxres ?? item.snippet.thumbnails.standard ?? item.snippet.thumbnails.high ?? item.snippet.thumbnails.medium ?? item.snippet.thumbnails.default;
-        const thumbUrl = thumb?.url ?? '';
-
-        results.push({
-          id: item.id,
-          title: item.snippet.title,
-          description: item.snippet.description,
-          thumbnailUrl: thumbUrl,
-          thumbnailWebp: toWebpThumbnail(thumbUrl),
-          durationSec: isoDurationToSec(item.contentDetails.duration),
-          channelId: item.snippet.channelId,
-          channelTitle: item.snippet.channelTitle,
-          publishedAt: item.snippet.publishedAt,
-          tags: item.snippet.tags ?? [],
-          durationIso: item.contentDetails.duration,
-          captionTracks: [], // Filled by a separate captions call if needed
-        });
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Search for educational videos by query and channel filters.
-   * Returns video IDs that can be passed to fetchVideoDetails.
-   */
-  async function searchEducationalVideos(query: string, options: {
+  async function searchVideos(query: string, options: {
     maxResults?: number;
-    channelIds?: string[];
-    topicId?: string;
     relevanceLanguage?: string;
-    publishedAfter?: string;
-  } = {}): Promise<string[]> {
-    const { maxResults = 20, channelIds, topicId, relevanceLanguage, publishedAfter } = options;
+    channelId?: string;
+  } = {}): Promise<VideoSearchResult[]> {
+    if (!apiKey) return [];
+    const { maxResults = 12, relevanceLanguage, channelId } = options;
 
     const params = new URLSearchParams({
       part: 'snippet',
@@ -160,96 +99,102 @@ export function createYouTubeService(config: LoadedConfig) {
       maxResults: String(Math.min(maxResults, 50)),
       safeSearch: 'strict',
       videoEmbeddable: 'true',
-      videoSyndicated: 'true',
-      videoCaption: 'closedCaption', // Prefer videos with captions
       order: 'relevance',
+      ...(relevanceLanguage ? { relevanceLanguage } : {}),
+      ...(channelId ? { channelId } : {}),
+      key: apiKey,
     });
 
-    if (channelIds?.length) {
-      // YouTube API doesn't support multiple channelIds in one search.
-      // We'll run multiple searches and merge results.
-      const allIds: string[] = [];
-      for (const channelId of channelIds) {
-        const searchParams = new URLSearchParams({
-          part: 'snippet',
-          q: query,
-          type: 'video',
-          maxResults: String(Math.ceil(20 / Math.max(1, channelIds.length))),
-          safeSearch: 'strict',
-          videoEmbeddable: 'true',
-          videoSyndicated: 'true',
-          videoCaption: 'closedCaption',
-          order: 'relevance',
-          channelId,
-        });
-        // Omitted for brevity — implement if needed
-      }
-      return []; // Simplified
-    }
-
-    // Without API key, we can't use the search endpoint.
-    return [];
+    const response = await fetch(`${YT_API}/search?${params}`, {
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) return [];
+    const payload = (await response.json()) as {
+      items?: Array<{
+        id?: { videoId?: string };
+        snippet?: { title: string; channelTitle: string; publishedAt: string; thumbnails?: { medium?: { url: string } } };
+      }>;
+    };
+    return (payload.items ?? [])
+      .filter((item) => item.id?.videoId)
+      .map((item) => ({
+        videoId: item.id!.videoId!,
+        title: item.snippet?.title ?? 'Untitled',
+        channelTitle: item.snippet?.channelTitle ?? '',
+        publishedAt: item.snippet?.publishedAt ?? '',
+        thumbnail: item.snippet?.thumbnails?.medium?.url ?? youtubeThumbnail(item.id!.videoId!),
+        durationSec: null,
+      }));
   }
 
   /**
-   * Fetch caption tracks for a video. Returns VTT URLs per language.
+   * Fetch full details (including duration and caption availability) for
+   * a batch of video ids. Requires an API key.
    */
-  async function fetchCaptionTracks(videoId: string): Promise<Array<{
-    languageCode: string;
-    name: string;
-    url: string;
-    kind: 'asr' | 'manual';
-  }>> {
-    // Requires API key and captions.download scope (OAuth) for full access.
-    // Without OAuth, we can only list available tracks via the API.
-    // For now, return empty — the client can use YouTube's built-in captions
-    // or we fetch via the timedtext endpoint if public.
-    return [];
+  async function fetchDetails(videoIds: string[]): Promise<VideoDetails[]> {
+    if (!apiKey || videoIds.length === 0) return [];
+    const params = new URLSearchParams({
+      part: 'snippet,contentDetails',
+      id: videoIds.slice(0, 50).join(','),
+      key: apiKey,
+    });
+    const response = await fetch(`${YT_API}/videos?${params}`, {
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) return [];
+    const payload = (await response.json()) as {
+      items?: Array<{
+        id: string;
+        snippet: { title: string; description: string; channelTitle: string; publishedAt: string; thumbnails?: { medium?: { url: string } } };
+        contentDetails: { duration: string; caption: string };
+      }>;
+    };
+    return (payload.items ?? []).map((item) => ({
+      videoId: item.id,
+      title: item.snippet?.title ?? 'Untitled',
+      description: item.snippet?.description ?? '',
+      channelTitle: item.snippet?.channelTitle ?? '',
+      publishedAt: item.snippet?.publishedAt ?? '',
+      durationSec: isoDurationToSec(item.contentDetails?.duration ?? ''),
+      thumbnail: item.snippet?.thumbnails?.medium?.url ?? youtubeThumbnail(item.id),
+      captionsAvailable: item.contentDetails?.caption === 'true',
+    }));
   }
 
   /**
-   * oEmbed fallback when no API key — returns basic HTML embed and thumbnail.
-   * This is public and requires no key.
+   * Public, keyless metadata for a single video URL via oEmbed.
+   * Returns null when the video is unavailable or private.
    */
   async function fetchOEmbed(url: string): Promise<{
     title: string;
-    thumbnailUrl: string;
-    thumbnailWebp: string;
+    authorName: string;
+    thumbnail: string;
     html: string;
-    width: number;
-    height: number;
   } | null> {
     try {
-      const resp = await fetch(`${OEMBED_API}?url=${encodeURIComponent(url)}&format=json`, {
-        signal: AbortSignal.timeout(10_000),
-      });
-      if (!resp.ok) return null;
-      const data = await resp.json() as {
+      const response = await fetch(
+        `${OEMBED_API}?url=${encodeURIComponent(url)}&format=json`,
+        { signal: AbortSignal.timeout(10_000) },
+      );
+      if (!response.ok) return null;
+      const data = (await response.json()) as {
         title: string;
+        author_name: string;
         thumbnail_url: string;
         html: string;
-        width: number;
-        height: number;
       };
       return {
         title: data.title,
-        thumbnailUrl: data.thumbnail_url,
-        thumbnailWebp: toWebpThumbnail(data.thumbnail_url),
+        authorName: data.author_name,
+        thumbnail: data.thumbnail_url,
         html: data.html,
-        width: data.width,
-        height: data.height,
       };
     } catch {
       return null;
     }
   }
 
-  return {
-    fetchVideoDetails,
-    fetchOEmbed,
-    searchEducationalVideos,
-    fetchCaptionTracks,
-  };
+  return { searchVideos, fetchDetails, fetchOEmbed };
 }
 
 export type YouTubeService = ReturnType<typeof createYouTubeService>;

@@ -29,6 +29,10 @@ export const userSchema = z.object({
   role: z.enum(ROLES),
   display_name: z.string().min(1).max(80),
   class_id: z.string().max(40).nullable(),
+  board_id: z.string().max(40).nullable(),
+  school_id: z.string().max(120).nullable(),
+  avatar_url: z.string().url().nullable(),
+  font_size: z.number().min(0.8).max(1.4).nullable(),
   password_hash: z.string().min(20),
 });
 
@@ -38,6 +42,10 @@ export interface UserRecord {
   role: Role;
   display_name: string;
   class_id: string | null;
+  board_id: string | null;
+  school_id: string | null;
+  avatar_url: string | null;
+  font_size: number | null;
   password_hash: string;
   created_at: number;
   email: string | null;
@@ -72,10 +80,26 @@ export const registerSchema = z
     displayName: z.string().min(2).max(60),
     role: z.enum(ROLES).default('student'),
     classId: z.string().max(40).optional(),
+    boardId: z.string().max(40).optional(),
+    schoolId: z.string().max(120).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'passwords_mismatch',
     path: ['confirmPassword'],
+  });
+
+/** Fields a user may change about themselves via PATCH /auth/profile. */
+export const profileSchema = z
+  .object({
+    displayName: z.string().min(2).max(80).optional(),
+    classId: z.string().max(40).nullable().optional(),
+    boardId: z.string().max(40).nullable().optional(),
+    schoolId: z.string().max(120).nullable().optional(),
+    avatarUrl: z.string().url().nullable().optional(),
+    fontSize: z.number().min(0.8).max(1.4).nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'empty_update',
   });
 
 export interface RegisterOptions {
@@ -279,15 +303,17 @@ export class AuthService {
     const id = `user-${randomBytes(8).toString('hex')}`;
     const now = this.now();
     await this.db.execute(
-      `INSERT INTO users (id, username, role, display_name, class_id, password_hash, created_at,
-                          email, google_sub, auth_provider)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'password')`,
+      `INSERT INTO users (id, username, role, display_name, class_id, board_id, school_id,
+                          password_hash, created_at, email, google_sub, auth_provider)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'password')`,
       [
         id,
         input.username,
         input.role,
         input.displayName.trim(),
         input.classId ?? null,
+        input.boardId ?? null,
+        input.schoolId ?? null,
         hashPassword(input.password),
         now,
         null,
@@ -298,6 +324,59 @@ export class AuthService {
     const user = await this.findById(id);
     if (!user) return { ok: false, reason: 'invalid' };
     return { ok: true, token: this.issueToken(user), user: toPublicUser(user) };
+  }
+
+  /**
+   * Updates the mutable profile fields a user may set about themselves:
+   * display name, class, board, school, avatar and preferred font size.
+   * Role, username and credentials are deliberately not here — those are
+   * set at registration and only an administrator may change them.
+   */
+  async updateProfile(
+    userId: string,
+    input: {
+      displayName?: string;
+      classId?: string | null;
+      boardId?: string | null;
+      schoolId?: string | null;
+      avatarUrl?: string | null;
+      fontSize?: number | null;
+    },
+  ): Promise<PublicUser | null> {
+    const user = await this.findById(userId);
+    if (!user) return null;
+
+    const displayName =
+      input.displayName !== undefined
+        ? input.displayName.trim().slice(0, 80)
+        : user.display_name;
+    if (displayName.length < 1) return null;
+
+    const classId =
+      input.classId !== undefined ? clampOrNull(input.classId, 40) : user.class_id;
+    const boardId =
+      input.boardId !== undefined ? clampOrNull(input.boardId, 40) : user.board_id;
+    const schoolId =
+      input.schoolId !== undefined ? clampOrNull(input.schoolId, 120) : user.school_id;
+    const avatarUrl =
+      input.avatarUrl !== undefined ? clampOrNull(input.avatarUrl, 500) : user.avatar_url;
+    const fontSize =
+      input.fontSize !== undefined
+        ? input.fontSize === null
+          ? null
+          : Math.min(1.4, Math.max(0.8, Number(input.fontSize) || 1))
+        : user.font_size;
+
+    await this.db.execute(
+      `UPDATE users
+       SET display_name = ?, class_id = ?, board_id = ?, school_id = ?,
+           avatar_url = ?, font_size = ?
+       WHERE id = ?`,
+      [displayName, classId, boardId, schoolId, avatarUrl, fontSize, userId],
+    );
+
+    const updated = await this.findById(userId);
+    return updated ? toPublicUser(updated) : null;
   }
 
   /** Signs a fresh session token for an existing user record. */
@@ -437,6 +516,10 @@ export interface PublicUser {
   role: Role;
   displayName: string;
   classId: string | null;
+  boardId: string | null;
+  schoolId: string | null;
+  avatarUrl: string | null;
+  fontSize: number | null;
 }
 
 export function toPublicUser(user: UserRecord): PublicUser {
@@ -446,7 +529,18 @@ export function toPublicUser(user: UserRecord): PublicUser {
     role: user.role,
     displayName: user.display_name,
     classId: user.class_id,
+    boardId: user.board_id,
+    schoolId: user.school_id,
+    avatarUrl: user.avatar_url,
+    fontSize: user.font_size,
   };
+}
+
+/** Trims a free-text profile field to its column width; null stays null. */
+function clampOrNull(value: string | null, max: number): string | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed.slice(0, max);
 }
 export type GoogleProfile =
   | { ok: true; sub: string; email: string | null; displayName: string }

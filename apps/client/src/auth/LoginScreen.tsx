@@ -33,12 +33,27 @@ interface Providers {
 
 type Mode = 'signin' | 'signup';
 
+/** Boards a student can study under. Proper nouns, so they are
+ *  not localised — the same name is used in every language. */
+const BOARDS = [
+  { id: 'CBSE', label: 'CBSE (NCERT)' },
+  { id: 'BSE_ODISHA', label: 'BSE Odisha' },
+  { id: 'CHSE', label: 'CHSE Odisha' },
+  { id: 'ICSE', label: 'ICSE' },
+] as const;
+
+/** Grades the curriculum covers. */
+const GRADES = ['8', '9', '10'] as const;
+
 export function LoginScreen({ auth }: { auth: AuthController }) {
   const [mode, setMode] = useState<Mode>('signin');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [boardId, setBoardId] = useState<string>('CBSE');
+  const [grade, setGrade] = useState<string>('8');
+  const [school, setSchool] = useState('');
   const [wantsTeacher, setWantsTeacher] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -147,6 +162,11 @@ export function LoginScreen({ auth }: { auth: AuthController }) {
           password,
           displayName: displayName.trim(),
           role: wantsTeacher ? 'teacher' : 'student',
+          // A student's board and class decide which
+          // content the library shows them.
+          classId: wantsTeacher ? undefined : `class-${grade}`,
+          boardId: wantsTeacher ? undefined : boardId,
+          schoolId: wantsTeacher ? undefined : school.trim() || undefined,
         });
         setNotice('Account created — you are signed in.');
       } catch (err) {
@@ -155,7 +175,7 @@ export function LoginScreen({ auth }: { auth: AuthController }) {
         setBusy(false);
       }
     },
-    [auth, mode, username, password, confirmPassword, displayName, wantsTeacher, busy],
+    [auth, mode, username, password, confirmPassword, displayName, wantsTeacher, boardId, grade, school, busy],
   );
 
   const fill = useCallback((u: string, p: string) => {
@@ -233,6 +253,54 @@ export function LoginScreen({ auth }: { auth: AuthController }) {
                   placeholder="••••••••"
                 />
               </label>
+
+              {/* A student's board, class and school decide which
+                  lectures the library shows them. Teachers manage a
+                  class instead of studying in one, so these are
+                  hidden for them. */}
+              {!wantsTeacher && (
+                <>
+                  <label className="login-field">
+                    <span>Board</span>
+                    <select
+                      value={boardId}
+                      onChange={(e) => setBoardId(e.target.value)}
+                    >
+                      {BOARDS.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="login-field">
+                    <span>Class</span>
+                    <select
+                      value={grade}
+                      onChange={(e) => setGrade(e.target.value)}
+                    >
+                      {GRADES.map((g) => (
+                        <option key={g} value={g}>
+                          Class {g}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="login-field">
+                    <span>School (optional)</span>
+                    <input
+                      type="text"
+                      value={school}
+                      onChange={(e) => setSchool(e.target.value)}
+                      autoComplete="organization"
+                      maxLength={120}
+                      placeholder="Your school"
+                    />
+                  </label>
+                </>
+              )}
 
               {/* Only offered when the deployment allows it — otherwise this
                   would be a checkbox that always fails on submit. */}

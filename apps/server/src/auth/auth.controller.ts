@@ -11,6 +11,7 @@ import { z } from 'zod';
 import type { AuthService, PublicUser, Role, UserRecord } from './auth.service.js';
 import {
   loginSchema,
+  profileSchema,
   registerSchema,
 } from './auth.service.js';
 
@@ -137,6 +138,24 @@ export async function registerAuthRoutes(
     return { user: toPublic(request.auth.user) };
   });
 
+  /**
+   * Updates the caller's own profile (name, class, board, school,
+   * avatar, font size). The token is the authority — a user can only
+   * ever patch their own record, never another's.
+   */
+  app.patch('/auth/profile', async (request, reply) => {
+    if (!request.auth) return reply.code(401).send({ error: 'unauthenticated' });
+
+    const parsed = profileSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'invalid_request', issues: parsed.error.issues });
+    }
+
+    const updated = await auth.updateProfile(request.auth.user.id, parsed.data);
+    if (!updated) return reply.code(404).send({ error: 'not_found' });
+    return { user: updated };
+  });
+
   app.post('/auth/logout', async (_request, reply) => {
     // Tokens are stateless; the client drops it. Endpoint exists so the client
     // has a single place to hook "session ended" later (e.g. denylist).
@@ -165,6 +184,10 @@ function toPublic(user: UserRecord): PublicUser {
     role: user.role,
     displayName: user.display_name,
     classId: user.class_id,
+    boardId: user.board_id,
+    schoolId: user.school_id,
+    avatarUrl: user.avatar_url,
+    fontSize: user.font_size,
   };
 }
 

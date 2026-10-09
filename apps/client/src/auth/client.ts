@@ -21,6 +21,10 @@ export interface SessionUser {
   role: Role;
   displayName: string;
   classId: string | null;
+  boardId: string | null;
+  schoolId: string | null;
+  avatarUrl: string | null;
+  fontSize: number | null;
 }
 
 interface StoredSession {
@@ -60,6 +64,9 @@ export interface SignUpInput {
   password: string;
   displayName: string;
   role?: Role;
+  classId?: string;
+  boardId?: string;
+  schoolId?: string;
 }
 
 /**
@@ -78,12 +85,43 @@ export async function signUpRequest(
       confirmPassword: input.password,
       displayName: input.displayName,
       role: input.role ?? 'student',
+      classId: input.classId,
+      boardId: input.boardId,
+      schoolId: input.schoolId,
     }),
   });
   if (response.status === 409) throw new Error('username_taken');
   if (response.status === 403) throw new Error('role_not_allowed');
   if (!response.ok) throw new Error('register_failed');
   return (await response.json()) as { user: SessionUser; token: string };
+}
+
+/**
+ * Updates the signed-in user's own profile (name, class, board,
+ * school, avatar, font size). The server trusts the token, so a
+ * user can only ever change their own record.
+ */
+export async function updateProfileRequest(
+  token: string,
+  input: {
+    displayName?: string;
+    classId?: string | null;
+    boardId?: string | null;
+    schoolId?: string | null;
+    avatarUrl?: string | null;
+    fontSize?: number | null;
+  },
+): Promise<{ user: SessionUser }> {
+  const response = await fetch(`${API_BASE}/auth/profile`, {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw new Error('profile_update_failed');
+  return (await response.json()) as { user: SessionUser };
 }
 
 /**
@@ -128,6 +166,14 @@ export interface AuthController {
   signIn: (username: string, password: string) => Promise<void>;
   signUp: (input: SignUpInput) => Promise<void>;
   signInWithGoogle: (idToken: string) => Promise<void>;
+  updateProfile: (input: {
+    displayName?: string;
+    classId?: string | null;
+    boardId?: string | null;
+    schoolId?: string | null;
+    avatarUrl?: string | null;
+    fontSize?: number | null;
+  }) => Promise<void>;
   signOut: () => void;
   isTeacher: boolean;
   isStudent: boolean;
@@ -197,6 +243,23 @@ export function useAuth(): AuthController {
     [applySession],
   );
 
+  const updateProfile = useCallback(
+    async (input: {
+      displayName?: string;
+      classId?: string | null;
+      boardId?: string | null;
+      schoolId?: string | null;
+      avatarUrl?: string | null;
+      fontSize?: number | null;
+    }) => {
+      if (state.status !== 'signed-in') return;
+      const { token } = state;
+      const result = await updateProfileRequest(token, input);
+      applySession({ ...result, token });
+    },
+    [applySession, state],
+  );
+
   const signOut = useCallback(() => {
     writeStored(null);
     setState({ status: 'signed-out' });
@@ -208,10 +271,11 @@ export function useAuth(): AuthController {
       signIn,
       signUp,
       signInWithGoogle,
+      updateProfile,
       signOut,
       isTeacher: state.status === 'signed-in' && state.user.role === 'teacher',
       isStudent: state.status === 'signed-in' && state.user.role === 'student',
     }),
-    [state, signIn, signOut],
+    [state, signIn, signUp, signInWithGoogle, updateProfile, signOut],
   );
 }

@@ -8,6 +8,7 @@ import type {
   VideoProgress,
   VideoDownloadManifest,
   SubtitleTrack,
+  VideoLanguage,
 } from './types';
 
 function token(): string | null {
@@ -34,6 +35,67 @@ async function authedFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+/**
+ * The server stores subtitles and language lists as JSON text
+ * and booleans as 0/1. The client works with real arrays and
+ * booleans, so the boundary normalises the row.
+ */
+function normalizeVideo(row: RawVideoRow): VideoLecture {
+  let subtitles: SubtitleTrack[] = [];
+  let languages: VideoLanguage[] = [];
+  try {
+    subtitles = row.subtitles_json ? JSON.parse(row.subtitles_json) : [];
+  } catch {
+    subtitles = [];
+  }
+  try {
+    languages = row.languages_json ? JSON.parse(row.languages_json) : [];
+  } catch {
+    languages = [];
+  }
+  return {
+    id: row.id,
+    lesson_id: row.lesson_id ?? '',
+    topic_id: row.topic_id ?? null,
+    title: row.title,
+    description: row.description ?? null,
+    board_id: row.board_id,
+    class_id: row.class_id,
+    subject: row.subject,
+    source: row.source,
+    source_url: row.source_url,
+    youtube_id: row.youtube_id ?? null,
+    duration_sec: row.duration_sec ?? null,
+    thumbnail_webp: row.thumbnail_webp ?? null,
+    subtitles,
+    languages,
+    downloadable: !!row.downloadable,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+interface RawVideoRow {
+  id: string;
+  lesson_id?: string | null;
+  topic_id?: string | null;
+  title: string;
+  description?: string | null;
+  board_id: string;
+  class_id: string;
+  subject: string;
+  source: 'youtube' | 'local' | 'diksha' | 'other';
+  source_url: string;
+  youtube_id?: string | null;
+  duration_sec?: number | null;
+  thumbnail_webp?: string | null;
+  subtitles_json?: string | null;
+  languages_json?: string | null;
+  downloadable?: number | boolean;
+  created_at: number;
+  updated_at: number;
+}
+
 /** List videos with optional filters. */
 export async function listVideos(filters: {
   board_id?: string;
@@ -48,15 +110,17 @@ export async function listVideos(filters: {
   Object.entries(filters).forEach(([k, v]) => {
     if (v !== undefined) searchParams.append(k, String(v));
   });
-  return authedFetch<{ videos: VideoLecture[]; total: number }>(
+  const payload = await authedFetch<{ videos: RawVideoRow[]; total: number }>(
     `/video?${searchParams.toString()}`,
   );
+  return { videos: payload.videos.map(normalizeVideo), total: payload.total };
 }
 
 /** Get a single video by ID. */
 export async function getVideo(id: string): Promise<VideoLecture | null> {
   try {
-    return await authedFetch<VideoLecture>(`/video/${id}`);
+    const row = await authedFetch<RawVideoRow>(`/video/${id}`);
+    return normalizeVideo(row);
   } catch (e) {
     if ((e as Error).message.includes('404')) return null;
     throw e;

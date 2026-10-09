@@ -1,277 +1,514 @@
 /**
- * VideoPlayer — custom video player with FFmpeg.wasm transcoding, colorful subtitles,
- * playback speed control, and offline download support.
+ * VideoPlayer — streams a lecture and tracks the student's progress.
  *
- * Features:
- * - FFmpeg.wasm for client-side transcoding (MP4 -> WebM/MP4)
- * - Custom VTT subtitle rendering with color/background styling
- * - Playback speed control (0.5x - 2x)
- * - Offline download with Service Worker caching
- * - Picture-in-Picture support
- * - Keyboard shortcuts
- * - Accessible controls
+ * Two honest playback paths:
+ *   - YouTube lectures play through the official YouTube IFrame
+ *     player, which is the only sanctioned way to embed a YouTube
+ *     video. It also provides YouTube's own multilingual captions
+ *     (including auto-translated tracks) and playback-speed control.
+ *   - Self-hosted / direct sources play through a <video> element
+ *     with our own colourful, multilingual subtitle overlay and a
+ *     real offline download (cached via the Cache API).
+ *
+ * We do NOT download YouTube videos — that is not permitted by
+ * YouTube's terms and cannot work reliably, so the button is
+ * honest about what it does: a YouTube lecture streams online and
+ * its subtitles can be saved for offline reading.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { parseVTT, ParsedVTTCue } from './vtt';
-import { fetchSubtitleText, getVideoDownloadManifest } from '../video/api';
-import type { VideoLecture, SubtitleTrack } from './types';
+import { parseVTT, type ParsedVTTCue } from './vtt';
+import {
+  fetchSubtitleText,
+  getVideoDownloadManifest,
+  saveVideoProgress,
+} from './api';
+import { translate as _t, createTranslator, type LocaleCode } from '../i18n';
+import type { SubtitleTrack } from './types';
+
+export interface VideoPlayerVideo {
+  id: string;
+  title: string;
+  source: 'youtube' | 'local' | 'diksha' | 'other';
+  source_url: string;
+  youtube_id: string | null;
+  thumbnail_webp: string | null;
+  subtitles: SubtitleTrack[];
+}
 
 interface VideoPlayerProps {
-  video: {
-    id: string;
-    title: string;
-    source_url: string;
-    youtube_id: string | null;
-    subtitles: Array<{ lang: string; label: string; url: string; format: 'vtt' | 'srt'; color?: string; background?: string }>;
-    thumbnail_webp: string | null;
-  };
+  video: VideoPlayerVideo;
   studentId: string;
+  locale: LocaleCode;
   onProgress?: (progress: { position_sec: number; completed: boolean }) => void;
-  className?: string;
 }
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
-
 const DEFAULT_SUBTITLE_COLOR = '#7cf03d';
-const DEFAULT_SUBTITLE_BG = 'rgba(0, 0, 0, 0.8)';
+const DEFAULT_SUBTITLE_BG = 'rgba(0, 0, 0, 0.82)';
 
-export function VideoPlayer({ video, studentId, onProgress, className }: VideoPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const subtitleOverlayRef = useRef<HTMLDivElement>(null);
-  const controlsRef = useRef<HTMLDivElement>(null);
-  
+/** Minimal, dependency-free typing for the YouTube IFrame API. */
+declare global {
+  interface Window {
+    YT?: {
+      Player: new (
+        el: HTMLElement | string,
+        opts: Record<string, unknown>,
+      ) => YTPlayer;
+      PlayerState: { PLAYING: number; PAUSED: number; ENDED: number };
+    };
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+interface YTPlayer {
+  getDuration: () => number;
+  getCurrentTime: () => number;
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+  playVideo: () => void;
+  pauseVideo: () => void;
+  setPlaybackRate: (rate: number) => void;
+  getPlaybackRate: () => number;
+  getAvailablePlaybackRates: () => number[];
+  setVolume: (volume: number) => void;
+  isMuted: () => boolean;
+  mute: () => void;
+  unMute: () => void;
+  loadModule: (module: string) => void;
+  getVideoEmbedCode: () => string;
+  addEventListener: (event: string, cb: (e: unknown) => void) => void;
+  destroy: () => void;
+}
+
+let ytApiPromise: Promise<void> | null = null;
+
+/** Loads the YouTube IFrame API exactly once. */
+function loadYouTubeIframeAPI(): Promise<void> {
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise<void>((resolve) => {
+    if (window.YT?.Player) {
+      resolve();
+      return;
+    }
+    const previous = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      previous?.();
+      resolve();
+    };
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    script.async = true;
+    script.onerror = () => resolve(); // resolve anyway so the UI can show an error
+    document.body.appendChild(script);
+  });
+  return ytApiPromise;
+}
+
+function formatTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${m}:${String(s).padStart(2, '0')}`;
+}
+
+export function VideoPlayer({
+  video,
+  studentId,
+  locale,
+  onProgress,
+}: VideoPlayerProps) {
+  const { t } = createTranslator(locale);
+  const isYouTube = video.source === 'youtube' && !!video.youtube_id;
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const ytPlayerRef = useRef<YTPlayer | null>(null);
+  const videoElRef = useRef<HTMLVideoElement | null>(null);
+  const progressTimerRef = useRef<number | null>(null);
+  const controlsTimerRef = useRef<number | null>(null);
+  const subtitleCuesRef = useRef<ParsedVTTCue[]>([]);
+  const lastSavedRef = useRef(0);
+
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [subtitleTrack, setSubtitleTrack] = useState<string | null>(null);
+  const [pip, setPip] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+  const [subtitleLang, setSubtitleLang] = useState<string | null>(null);
   const [subtitleColor, setSubtitleColor] = useState(DEFAULT_SUBTITLE_COLOR);
   const [subtitleBg, setSubtitleBg] = useState(DEFAULT_SUBTITLE_BG);
-  const [subtitles, setSubtitles] = useState<ParsedVTTCue[]>([]);
-  const [availableSubtitles, setAvailableSubtitles] = useState<Array<{ lang: string; label: string }>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [activeCue, setActiveCue] = useState<ParsedVTTCue | null>(null);
+  const [savedOffline, setSavedOffline] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [pip, setPip] = useState(false);
-  
-  const controlsTimeoutRef = useRef<number | null>(null);
-  const progressSaveTimeoutRef = useRef<number | null>(null);
-  const subtitleIndexRef = useRef(0);
-  const lastProgressReportRef = useRef(0);
+  const [showControls, setShowControls] = useState(true);
 
-  // Load subtitle tracks on mount
-  useEffect(() => {
-    const tracks = video.subtitles.map(s => ({ lang: s.lang, label: s.label }));
-    setAvailableSubtitles(tracks);
-    if (tracks.length > 0) {
-      // Load first subtitle track by default
-      loadSubtitle(tracks[0].lang);
-    } else {
-      setLoading(false);
-    }
-  }, [video.subtitles]);
+  const availableSubtitles = video.subtitles;
 
-  const loadSubtitle = useCallback(async (lang: string) => {
-    setLoading(true);
-    try {
-      const vttText = await fetchSubtitleText(video.id, lang);
-      if (vttText) {
-        const parsed = parseVTT(vttText);
-        setSubtitles(parsed);
+  /* ---------------- progress persistence ---------------- */
+  const reportProgress = useCallback(
+    (positionSec: number, dur: number) => {
+      const completed = dur > 0 && positionSec >= dur * 0.95;
+      onProgress?.({ position_sec: positionSec, completed });
+      const now = Date.now();
+      if (now - lastSavedRef.current > 5000) {
+        lastSavedRef.current = now;
+        void saveVideoProgress(video.id, {
+          position_sec: positionSec,
+          completed,
+          playback_speed: playbackRate,
+          subtitle_lang: subtitleLang ?? undefined,
+          subtitle_color: subtitleColor,
+          subtitle_bg: subtitleBg,
+        });
       }
-      setSubtitleTrack(lang);
-    } catch (err) {
-      console.error('Failed to load subtitle:', err);
-    } finally {
-      setLoading(false);
+    },
+    [onProgress, video.id, playbackRate, subtitleLang, subtitleColor, subtitleBg],
+  );
+
+  const startProgressTimer = useCallback(
+    (getPosition: () => number, getDuration: () => number) => {
+      if (progressTimerRef.current) window.clearInterval(progressTimerRef.current);
+      progressTimerRef.current = window.setInterval(() => {
+        const pos = getPosition();
+        setCurrentTime(pos);
+        reportProgress(pos, getDuration());
+      }, 1000);
+    },
+    [reportProgress],
+  );
+
+  const stopProgressTimer = useCallback(() => {
+    if (progressTimerRef.current) {
+      window.clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
     }
+  }, []);
+
+  /* ---------------- YouTube path ---------------- */
+  useEffect(() => {
+    if (!isYouTube || !containerRef.current) return;
+    let disposed = false;
+    let player: YTPlayer | null = null;
+
+    void loadYouTubeIframeAPI().then(() => {
+      if (disposed || !containerRef.current || !window.YT?.Player) {
+        if (!window.YT?.Player) setError('Video player could not be loaded.');
+        return;
+      }
+      // The container must be empty so a remount does not stack players.
+      containerRef.current.replaceChildren();
+      player = new window.YT.Player(containerRef.current, {
+        videoId: video.youtube_id!,
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          cc_load_policy: 1,
+          controls: 1,
+        },
+        events: {
+          onReady: () => {
+            if (disposed || !player) return;
+            setDuration(player.getDuration());
+            setReady(true);
+            // Restore caption module so the language menu is populated.
+            try {
+              player.loadModule('cc');
+            } catch {
+              /* captions are optional */
+            }
+            startProgressTimer(
+              () => player?.getCurrentTime() ?? 0,
+              () => player?.getDuration() ?? 0,
+            );
+          },
+          onStateChange: (e: unknown) => {
+            if (disposed || !player) return;
+            const state = (e as { data?: number })?.data;
+            const states = window.YT?.PlayerState;
+            if (state === states?.PLAYING) {
+              setPlaying(true);
+            } else if (state === states?.PAUSED) {
+              setPlaying(false);
+            } else if (state === states?.ENDED) {
+              setPlaying(false);
+              setCurrentTime(player.getDuration());
+              reportProgress(player.getDuration(), player.getDuration());
+            }
+          },
+          onError: () => {
+            if (!disposed) setError('This lecture could not be played.');
+          },
+        },
+      });
+      ytPlayerRef.current = player;
+    });
+
+    return () => {
+      disposed = true;
+      stopProgressTimer();
+      try {
+        player?.destroy();
+      } catch {
+        /* already gone */
+      }
+      ytPlayerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isYouTube, video.youtube_id]);
+
+  /* ---------------- HTML5 path ---------------- */
+  const loadSubtitleCues = useCallback(async (lang: string | null) => {
+    if (!lang) {
+      subtitleCuesRef.current = [];
+      setActiveCue(null);
+      return;
+    }
+    const text = await fetchSubtitleText(video.id, lang);
+    subtitleCuesRef.current = text ? parseVTT(text) : [];
   }, [video.id]);
 
-  // Video event handlers
-  const handleLoadedMetadata = useCallback(() => {
-    const v = videoRef.current;
-    if (v) {
-      setDuration(v.duration);
-      setLoading(false);
+  useEffect(() => {
+    if (isYouTube) return;
+    // Prefer the first available track, or the user's saved language.
+    const preferred =
+      availableSubtitles.find((s) => s.lang === subtitleLang)?.lang ??
+      availableSubtitles[0]?.lang ??
+      null;
+    setSubtitleLang(preferred);
+    void loadSubtitleCues(preferred);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isYouTube, video.id]);
+
+  const findActiveCue = useCallback((time: number): ParsedVTTCue | null => {
+    const cues = subtitleCuesRef.current;
+    for (const cue of cues) {
+      if (time >= cue.startTime && time < cue.endTime) return cue;
     }
+    return null;
   }, []);
 
-  const handleTimeUpdate = useCallback(() => {
-    const v = videoRef.current;
+  const onTimeUpdate = useCallback(() => {
+    const v = videoElRef.current;
     if (!v) return;
-    
     const time = v.currentTime;
     setCurrentTime(time);
-    
-    // Update subtitle overlay
-    subtitleIndexRef.current = findCurrentSubtitleIndex(time);
-    
-    // Report progress periodically (every 5 seconds)
-    const now = Date.now();
-    if (now - lastProgressReportRef.current > 5000) {
-      lastProgressReportRef.current = now;
-      onProgress?.({ position_sec: time, completed: time >= duration * 0.95 });
-      
-      // Persist progress
-      if (progressSaveTimeoutRef.current) clearTimeout(progressSaveTimeoutRef.current);
-      progressSaveTimeoutRef.current = window.setTimeout(() => {
-        import('../video/api').then(m => m.saveVideoProgress(video.id, {
-          position_sec: time,
-          completed: time >= duration * 0.95,
-        }));
-      }, 1000);
-    }
-  }, [duration]);
+    setActiveCue(findActiveCue(time));
+    reportProgress(time, v.duration || 0);
+  }, [findActiveCue, reportProgress]);
 
-  const handleEnded = useCallback(() => {
+  const onLoadedMetadata = useCallback(() => {
+    const v = videoElRef.current;
+    if (!v) return;
+    setDuration(v.duration);
+    setReady(true);
+    startProgressTimer(
+      () => videoElRef.current?.currentTime ?? 0,
+      () => videoElRef.current?.duration ?? 0,
+    );
+  }, [startProgressTimer]);
+
+  const onEnded = useCallback(() => {
     setPlaying(false);
-    onProgress?.({ position_sec: duration, completed: true });
-  }, [duration]);
+    const v = videoElRef.current;
+    if (v) reportProgress(v.duration, v.duration);
+  }, [reportProgress]);
 
-  const findCurrentSubtitleIndex = (time: number): number => {
-    let index = 0;
-    for (let i = 0; i < subtitles.length; i++) {
-      if (subtitles[i].startTime <= time && subtitles[i].endTime > time) {
-        return i;
-      }
-      if (subtitles[i].startTime <= time) {
-        index = i;
-      }
-    }
-    return index;
-  };
-
-  // Control handlers
+  /* ---------------- controls ---------------- */
   const togglePlay = useCallback(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) {
-      v.play().catch(() => {});
-      setPlaying(true);
+    if (isYouTube) {
+      const p = ytPlayerRef.current;
+      if (!p) return;
+      if (playing) p.pauseVideo();
+      else p.playVideo();
     } else {
-      v.pause();
-      setPlaying(false);
+      const v = videoElRef.current;
+      if (!v) return;
+      if (v.paused) void v.play().catch(() => {});
+      else v.pause();
     }
-  }, []);
+  }, [isYouTube, playing]);
 
-  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = videoRef.current;
-    if (!v) return;
-    const time = parseFloat(e.target.value);
-    v.currentTime = time;
-    setCurrentTime(time);
-  }, []);
+  const seek = useCallback(
+    (seconds: number) => {
+      if (isYouTube) {
+        ytPlayerRef.current?.seekTo(Math.max(0, seconds), true);
+        setCurrentTime(Math.max(0, seconds));
+      } else {
+        const v = videoElRef.current;
+        if (!v) return;
+        v.currentTime = Math.max(0, Math.min(seconds, v.duration || seconds));
+        setCurrentTime(v.currentTime);
+      }
+    },
+    [isYouTube],
+  );
 
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = videoRef.current;
-    if (!v) return;
-    const vol = parseFloat(e.target.value);
-    v.volume = vol;
-    setVolume(vol);
-    setMuted(vol === 0);
-  }, []);
+  const changeRate = useCallback(
+    (rate: number) => {
+      setPlaybackRate(rate);
+      if (isYouTube) ytPlayerRef.current?.setPlaybackRate(rate);
+      else if (videoElRef.current) videoElRef.current.playbackRate = rate;
+    },
+    [isYouTube],
+  );
+
+  const changeVolume = useCallback(
+    (vol: number) => {
+      setVolume(vol);
+      setMuted(vol === 0);
+      if (isYouTube) {
+        const p = ytPlayerRef.current;
+        if (!p) return;
+        p.setVolume(Math.round(vol * 100));
+        if (vol === 0) p.mute();
+        else p.unMute();
+      } else if (videoElRef.current) {
+        videoElRef.current.volume = vol;
+        videoElRef.current.muted = vol === 0;
+      }
+    },
+    [isYouTube],
+  );
 
   const toggleMute = useCallback(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = !v.muted;
-    setMuted(v.muted);
-  }, []);
-
-  const handleRateChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const v = videoRef.current;
-    if (!v) return;
-    const rate = parseFloat(e.target.value);
-    v.playbackRate = rate;
-    setPlaybackRate(rate);
-  }, []);
+    changeVolume(muted ? volume || 1 : 0);
+  }, [changeVolume, muted, volume]);
 
   const toggleFullscreen = useCallback(async () => {
-    const v = videoRef.current;
-    if (!v) return;
     try {
-      if (!fullscreen) {
-        await v.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
+      if (!fullscreen) await containerRef.current?.requestFullscreen();
+      else await document.exitFullscreen();
       setFullscreen(!fullscreen);
-    } catch (err) {
-      console.error('Fullscreen error:', err);
+    } catch {
+      /* fullscreen unsupported */
     }
   }, [fullscreen]);
 
   const togglePip = useCallback(async () => {
-    const v = videoRef.current;
+    if (isYouTube) return; // YouTube iframe does not support PiP via the element.
+    const v = videoElRef.current;
     if (!v) return;
     try {
-      if (!pip) {
-        await v.requestPictureInPicture();
-      } else {
-        await document.exitPictureInPicture();
-      }
+      if (!pip) await v.requestPictureInPicture();
+      else await document.exitPictureInPicture();
       setPip(!pip);
-    } catch (err) {
-      console.error('PiP error:', err);
+    } catch {
+      /* PiP unsupported */
     }
-  }, [pip]);
+  }, [isYouTube, pip]);
 
-  const handleSubtitleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    loadSubtitle(e.target.value);
-  }, []);
+  const changeSubtitle = useCallback(
+    (lang: string | null) => {
+      setSubtitleLang(lang);
+      if (isYouTube) {
+        // Ask the YouTube player to switch its caption track; the
+        // player also exposes a full language + auto-translate menu.
+        try {
+          ytPlayerRef.current?.loadModule('cc');
+        } catch {
+          /* optional */
+        }
+      } else {
+        void loadSubtitleCues(lang);
+      }
+    },
+    [isYouTube, loadSubtitleCues],
+  );
 
-  const handleSubtitleColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSubtitleColor(e.target.value);
-  }, []);
-
-  const handleSubtitleBgChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSubtitleBg(e.target.value);
-  }, []);
-
-  // Download video for offline viewing
+  /* ---------------- download (honest, per-source) ---------------- */
   const handleDownload = useCallback(async () => {
+    if (isYouTube) {
+      // YouTube's terms do not permit downloading the video. We save
+      // the lecture's subtitles (where a track exists) and metadata
+      // so the student can read them offline.
+      setDownloading(true);
+      try {
+        const cache = await caches.open('edumitra-video-meta');
+        const meta = new Response(
+          JSON.stringify({
+            id: video.id,
+            title: video.title,
+            source_url: video.source_url,
+            youtube_id: video.youtube_id,
+            saved_at: Date.now(),
+          }),
+          { headers: { 'content-type': 'application/json' } },
+        );
+        await cache.put(`/video-meta/${video.id}.json`, meta);
+        const track = availableSubtitles[0];
+        if (track) {
+          const text = await fetchSubtitleText(video.id, track.lang);
+          if (text) {
+            await cache.put(
+              `/video-subtitles/${video.id}.vtt`,
+              new Response(text, { headers: { 'content-type': 'text/vtt' } }),
+            );
+          }
+        }
+        setSavedOffline(true);
+      } catch {
+        setError('Could not save for offline.');
+      } finally {
+        setDownloading(false);
+      }
+      return;
+    }
+
+    // Direct source: a real, playable offline copy.
     setDownloading(true);
     try {
       const manifest = await getVideoDownloadManifest(video.id, '480p');
-      if (!manifest) throw new Error('Download not available');
-      
-      // Fetch and cache via Service Worker
-      const response = await fetch(manifest.source_url);
-      if (!response.ok) throw new Error('Download failed');
-      
+      const url = manifest?.source_url ?? video.source_url;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('download_failed');
       const blob = await response.blob();
       const cache = await caches.open('edumitra-videos');
-      await cache.put(manifest.source_url, new Response(blob));
-      
-      // Also cache subtitles
-      const subs = await fetchSubtitleText(manifest.video_id, 'en');
-      if (subs) {
-        const subBlob = new Blob([subs], { type: 'text/vtt' });
-        await cache.put(`/subtitles/${manifest.video_id}.vtt`, new Response(subBlob));
+      await cache.put(url, new Response(blob));
+      const track = availableSubtitles[0];
+      if (track) {
+        const text = await fetchSubtitleText(video.id, track.lang);
+        if (text) {
+          await cache.put(
+            `/video-subtitles/${video.id}.vtt`,
+            new Response(text, { headers: { 'content-type': 'text/vtt' } }),
+          );
+        }
       }
-      
-      alert('Video downloaded for offline viewing!');
-    } catch (err) {
-      console.error('Download failed:', err);
-      alert('Download failed. Please try again.');
+      setSavedOffline(true);
+    } catch {
+      setError('Download failed. Check your connection and try again.');
     } finally {
       setDownloading(false);
     }
-  }, [video.id]);
+  }, [isYouTube, video, availableSubtitles]);
 
-  // Keyboard shortcuts
+  /* ---------------- auto-hide controls ---------------- */
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const v = videoRef.current;
-      if (!v) return;
-      
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      
+    if (!playing) {
+      setShowControls(true);
+      return;
+    }
+    if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = window.setTimeout(() => setShowControls(false), 3000);
+    return () => {
+      if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
+    };
+  }, [playing, currentTime]);
+
+  /* ---------------- keyboard shortcuts ---------------- */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
       switch (e.key) {
         case ' ':
         case 'k':
@@ -280,21 +517,19 @@ export function VideoPlayer({ video, studentId, onProgress, className }: VideoPl
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          v.currentTime = Math.max(0, v.currentTime - 10);
+          seek(currentTime - 10);
           break;
         case 'ArrowRight':
           e.preventDefault();
-          v.currentTime = Math.min(duration, v.currentTime + 10);
+          seek(currentTime + 10);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          v.volume = Math.min(1, v.volume + 0.1);
-          setVolume(v.volume);
+          changeVolume(Math.min(1, volume + 0.1));
           break;
         case 'ArrowDown':
           e.preventDefault();
-          v.volume = Math.max(0, v.volume - 0.1);
-          setVolume(v.volume);
+          changeVolume(Math.max(0, volume - 0.1));
           break;
         case 'm':
           e.preventDefault();
@@ -302,289 +537,273 @@ export function VideoPlayer({ video, studentId, onProgress, className }: VideoPl
           break;
         case 'f':
           e.preventDefault();
-          toggleFullscreen();
+          void toggleFullscreen();
           break;
-        case 'p':
-          e.preventDefault();
-          togglePip();
-          break;
-        case '>':
         case '.':
+        case '>':
           e.preventDefault();
-          setPlaybackRate(Math.min(2, playbackRate + 0.25));
+          changeRate(Math.min(2, playbackRate + 0.25));
           break;
-        case '<':
         case ',':
+        case '<':
           e.preventDefault();
-          setPlaybackRate(Math.max(0.5, playbackRate - 0.25));
+          changeRate(Math.max(0.5, playbackRate - 0.25));
           break;
       }
     };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [duration, playbackRate, togglePlay, toggleMute, toggleFullscreen, togglePip]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [togglePlay, seek, currentTime, changeVolume, volume, toggleMute, toggleFullscreen, changeRate, playbackRate]);
 
-  // Auto-hide controls
-  useEffect(() => {
-    if (playing && !fullscreen) {
-      controlsTimeoutRef.current = window.setTimeout(() => setShowControls(false), 3000);
-    }
-    return () => {
-      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-    };
-  }, [playing, fullscreen]);
-
-  // Cleanup
+  /* ---------------- cleanup ---------------- */
   useEffect(() => {
     return () => {
-      if (progressSaveTimeoutRef.current) clearTimeout(progressSaveTimeoutRef.current);
-      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+      stopProgressTimer();
+      if (controlsTimerRef.current) window.clearTimeout(controlsTimerRef.current);
     };
-  }, []);
+  }, [stopProgressTimer]);
 
-  const formatTime = (seconds: number): string => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return duration >= 3600 
-      ? `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
-      : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
-  const currentSubtitle = subtitles[subtitleIndexRef.current];
-  const showSubtitle = currentSubtitle && subtitleTrack && currentTime >= currentSubtitle.startTime && currentTime < currentSubtitle.endTime;
+  const showSubtitle = !isYouTube && activeCue && subtitleLang;
 
   return (
-    <div 
-      className={`video-player ${className || ''} ${fullscreen ? 'fullscreen' : ''} ${playing ? 'playing' : 'paused'}`}
-      onMouseEnter={() => setShowControls(true)}
+    <div
+      className={`video-player ${fullscreen ? 'fullscreen' : ''}`}
+      onMouseMove={() => setShowControls(true)}
       onMouseLeave={() => {
-        if (playing) {
-          controlsTimeoutRef.current = window.setTimeout(() => setShowControls(false), 3000);
-        }
+        if (playing) setShowControls(false);
       }}
     >
       <div className="video-container">
-        <video
-          ref={videoRef}
-          src={video.source_url}
-          poster={video.thumbnail_webp || undefined}
-          onLoadedMetadata={handleLoadedMetadata}
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEnded}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onError={(e) => setError('Failed to load video. Please try again.')}
-          playsInline
-          crossOrigin="anonymous"
-        >
-          {video.subtitles.map(s => (
-            <track
-              key={s.lang}
-              kind="subtitles"
-              src={s.url}
-              srcLang={s.lang}
-              label={s.label}
-              default={s.lang === subtitleTrack}
-            />
-          ))}
-        </video>
-        
-        {/* Custom subtitle overlay for styling */}
-        <div 
-          ref={subtitleOverlayRef}
-          className="subtitle-overlay"
-          style={{
-            color: subtitleColor,
-            backgroundColor: subtitleBg,
-          }}
-        >
-          {showSubtitle && (
-            <div className="subtitle-text" style={{ color: subtitleColor, backgroundColor: subtitleBg }}>
-              {currentSubtitle.text}
-            </div>
-          )}
-        </div>
-        
-        {/* Loading overlay */}
-        {loading && (
-          <div className="video-loading">
-            <div className="spinner" />
-            <span>Loading video...</span>
+        {isYouTube ? (
+          <div
+            ref={containerRef}
+            className="yt-player-host"
+            data-youtube-id={video.youtube_id ?? undefined}
+          />
+        ) : (
+          <video
+            ref={videoElRef}
+            src={video.source_url}
+            poster={video.thumbnail_webp ?? undefined}
+            className="video-element"
+            playsInline
+            preload="metadata"
+            onLoadedMetadata={onLoadedMetadata}
+            onTimeUpdate={onTimeUpdate}
+            onEnded={onEnded}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onError={() => setError('This lecture could not be loaded.')}
+          />
+        )}
+
+        {/* Colourful subtitle overlay (direct sources) */}
+        {showSubtitle && activeCue && (
+          <div
+            className="subtitle-overlay"
+            aria-live="polite"
+          >
+            <span
+              className="subtitle-text"
+              style={{ color: subtitleColor, backgroundColor: subtitleBg }}
+            >
+              {activeCue.text}
+            </span>
           </div>
         )}
-        
+
+        {!ready && !error && (
+          <div className="video-loading" aria-busy="true">
+            <div className="spinner" />
+            <span>{_t(locale, 'common.loading')}</span>
+          </div>
+        )}
+
         {error && (
           <div className="video-error" role="alert">
-            {error}
-            <button onClick={() => { setError(null); videoRef.current?.load(); }}>
-              Retry
+            <p>{error}</p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setError(null)}
+            >
+              {_t(locale, 'common.retry')}
             </button>
           </div>
         )}
       </div>
-      
+
       {/* Controls */}
-      <div 
-        ref={controlsRef}
-        className={`video-controls ${showControls || !playing ? 'visible' : ''} ${fullscreen ? 'fullscreen' : ''}`}
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => {
-          if (playing) controlsTimeoutRef.current = window.setTimeout(() => setShowControls(false), 3000);
-        }}
+      <div
+        className={`video-controls ${showControls || !playing ? 'visible' : ''}`}
+        onMouseMove={() => setShowControls(true)}
       >
         <div className="progress-bar">
           <input
             type="range"
             min={0}
-            max={duration || 100}
+            max={duration || 0}
+            step={0.1}
             value={currentTime}
-            onChange={handleSeek}
-            aria-label="Seek"
+            onChange={(e) => seek(Number(e.target.value))}
+            aria-label={_t(locale, 'common.progress')}
           />
-          <div className="time-display">
-            <span>{formatTime(currentTime)}</span>
-            <span>/</span>
-            <span>{formatTime(duration)}</span>
-          </div>
+          <span className="time-display">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
         </div>
-        
+
         <div className="controls-row">
-          <div className="controls-left">
-            <button 
+          <div className="controls-group">
+            <button
+              type="button"
               className="control-btn"
               onClick={togglePlay}
-              aria-label={playing ? 'Pause' : 'Play'}
-              disabled={loading}
+              aria-label={playing ? _t(locale, 'video.pause') : _t(locale, 'video.play')}
+              disabled={!ready}
             >
               {playing ? '⏸' : '▶'}
             </button>
-            
-            <button 
+            <button
+              type="button"
               className="control-btn"
-              onClick={() => { const v = videoRef.current; if (v) v.currentTime = Math.max(0, v.currentTime - 10); }}
-              aria-label="Rewind 10s"
+              onClick={() => seek(currentTime - 10)}
+              aria-label="Back 10 seconds"
+              disabled={!ready}
             >
               ⏪
             </button>
-            
-            <button 
+            <button
+              type="button"
               className="control-btn"
-              onClick={() => { const v = videoRef.current; if (v) v.currentTime = Math.min(duration, v.currentTime + 10); }}
-              aria-label="Forward 10s"
+              onClick={() => seek(currentTime + 10)}
+              aria-label="Forward 10 seconds"
+              disabled={!ready}
             >
               ⏩
             </button>
           </div>
-          
-          <div className="controls-center">
-            <select 
-              value={subtitleTrack || 'off'}
-              onChange={handleSubtitleChange}
-              disabled={availableSubtitles.length === 0}
-              aria-label="Subtitle language"
-            >
-              <option value="off">🔇 Off</option>
-              {availableSubtitles.map(s => (
-                <option key={s.lang} value={s.lang}>{s.label}</option>
-              ))}
-            </select>
-            
-            <select 
-              value={playbackRate} 
-              onChange={handleRateChange}
-              aria-label="Playback speed"
-            >
-              {SPEED_OPTIONS.map(s => (
-                <option key={s} value={s}>{s}x</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="controls-right">
-            <div className="volume-control">
-              <button 
-                className="control-btn"
-                onClick={toggleMute}
-                aria-label={muted ? 'Unmute' : 'Mute'}
+
+          <div className="controls-group controls-centre">
+            <label className="control-select">
+              <span className="sr-only">{_t(locale, 'video.subtitles')}</span>
+              <select
+                value={subtitleLang ?? ''}
+                onChange={(e) => changeSubtitle(e.target.value || null)}
+                disabled={isYouTube || availableSubtitles.length === 0}
+                title={_t(locale, 'video.subtitles')}
               >
-                {muted || volume === 0 ? '🔇' : volume < 0.5 ? '🔈' : '🔊'}
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.1}
-                value={volume}
-                onChange={handleVolumeChange}
-                aria-label="Volume"
-                style={{ width: '80px' }}
-              />
-            </div>
-            
-            <div className="subtitle-styles">
-              <label>
-                <span className="sr-only">Subtitle color</span>
+                <option value="">{_t(locale, 'video.captions_off')}</option>
+                {availableSubtitles.map((s) => (
+                  <option key={s.lang} value={s.lang}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="control-select">
+              <span className="sr-only">{_t(locale, 'video.speed')}</span>
+              <select
+                value={playbackRate}
+                onChange={(e) => changeRate(Number(e.target.value))}
+                title={_t(locale, 'video.speed')}
+              >
+                {SPEED_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}×
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="controls-group">
+            <button
+              type="button"
+              className="control-btn"
+              onClick={toggleMute}
+              aria-label={muted ? _t(locale, 'video.unmute') : _t(locale, 'video.mute')}
+              disabled={!ready}
+            >
+              {muted || volume === 0 ? '🔇' : volume < 0.5 ? '🔈' : '🔊'}
+            </button>
+            <input
+              type="range"
+              className="volume-slider"
+              min={0}
+              max={1}
+              step={0.1}
+              value={volume}
+              onChange={(e) => changeVolume(Number(e.target.value))}
+              aria-label={_t(locale, 'video.mute')}
+            />
+
+            {!isYouTube && (
+              <>
                 <input
                   type="color"
                   value={subtitleColor}
-                  onChange={handleSubtitleColorChange}
-                  aria-label="Subtitle color"
+                  onChange={(e) => setSubtitleColor(e.target.value)}
+                  className="colour-picker"
+                  aria-label={_t(locale, 'video.subtitle_colour')}
+                  title={_t(locale, 'video.subtitle_colour')}
                 />
-              </label>
-              <label>
-                <span className="sr-only">Subtitle background</span>
                 <input
                   type="color"
                   value={subtitleBg}
-                  onChange={handleSubtitleBgChange}
-                  aria-label="Subtitle background"
+                  onChange={(e) => setSubtitleBg(e.target.value)}
+                  className="colour-picker"
+                  aria-label={_t(locale, 'video.subtitle_background')}
+                  title={_t(locale, 'video.subtitle_background')}
                 />
-              </label>
-            </div>
-            
-            <button 
+              </>
+            )}
+
+            {!isYouTube && (
+              <button
+                type="button"
+                className="control-btn"
+                onClick={() => void togglePip()}
+                aria-label={_t(locale, 'video.pip')}
+                disabled={!ready || pip}
+              >
+                🔲
+              </button>
+            )}
+
+            <button
+              type="button"
               className="control-btn"
-              onClick={togglePip}
-              aria-label={pip ? 'Exit Picture-in-Picture' : 'Picture-in-Picture'}
-              disabled={!document.pictureInPictureEnabled}
+              onClick={() => void toggleFullscreen()}
+              aria-label={fullscreen ? _t(locale, 'video.exit_fullscreen') : _t(locale, 'video.fullscreen')}
             >
-              {pip ? '⬛' : '🔲'}
+              ⛶
             </button>
-            
-            <button 
-              className="control-btn"
-              onClick={toggleFullscreen}
-              aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-            >
-              {fullscreen ? '⛶' : '⛶'}
-            </button>
-            
-            <button 
+
+            <button
+              type="button"
               className="control-btn download-btn"
-              onClick={handleDownload}
-              disabled={downloading}
-              aria-label="Download for offline"
+              onClick={() => void handleDownload()}
+              disabled={downloading || !ready}
+              aria-label={_t(locale, 'video.save_offline')}
+              title={
+                isYouTube
+                  ? _t(locale, 'video.stream_note')
+                  : _t(locale, 'video.save_offline')
+              }
             >
               {downloading ? '⏳' : '⬇'}
             </button>
           </div>
         </div>
+
+        {isYouTube && (
+          <p className="video-source-note">{_t(locale, 'video.stream_note')}</p>
+        )}
       </div>
     </div>
   );
-}
-
-function formatTime(seconds: number): string {
-  if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  if (seconds >= 3600) {
-    return `${h}:${String(m).padStart(2, '0')}:${String(Math.floor(s)).padStart(2, '0')}`;
-  }
-  return `${Math.floor(m)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 }
 
 export default VideoPlayer;

@@ -24,6 +24,10 @@ const STUDENT: SessionUser = {
   role: 'student',
   displayName: 'Aarav',
   classId: 'class-8-a',
+  boardId: 'CBSE',
+  schoolId: null,
+  avatarUrl: null,
+  fontSize: null,
 };
 
 let container: HTMLDivElement;

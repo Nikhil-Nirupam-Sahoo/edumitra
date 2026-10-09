@@ -18,6 +18,7 @@ import { LessonViewer } from './modules/lesson/LessonViewer';
 import { TeacherDashboard } from './modules/dashboard/TeacherDashboard';
 import { SettingsPanel } from './modules/settings/SettingsPanel';
 import { VideoLecturePage } from './video/VideoLecturePage';
+import { VideoLibrary } from './video/VideoLibrary';
 import { getSyncEngine } from './sync/syncEngine';
 import { HomeScreen } from './modules/home/HomeScreen';
 import { restoreRemoteLocales } from './i18n/remote';
@@ -33,6 +34,7 @@ import { resetGamificationStore } from './gamification/store';
 type Route =
   | { name: 'home' }
   | { name: 'lesson'; lessonId: string }
+  | { name: 'videos' }
   | { name: 'video'; videoId: string }
   | { name: 'teacher' }
   | { name: 'settings' }
@@ -50,9 +52,10 @@ export function parseRoute(hash: string): Route {
     const lessonId = decodeURIComponent(path.slice('lesson/'.length));
     return lessonId ? { name: 'lesson', lessonId } : { name: 'home' };
   }
+  if (path === 'videos') return { name: 'videos' };
   if (path.startsWith('video/')) {
     const videoId = decodeURIComponent(path.slice('video/'.length));
-    return videoId ? { name: 'video', videoId } : { name: 'home' };
+    return videoId ? { name: 'video', videoId } : { name: 'videos' };
   }
   if (path === 'teacher') return { name: 'teacher' };
   if (path === 'settings') return { name: 'settings' };
@@ -158,7 +161,9 @@ export function App() {
         ? '#/'
         : next.name === 'lesson'
           ? `#/lesson/${encodeURIComponent(next.lessonId)}`
-          : `#/${next.name}`;
+          : next.name === 'video'
+            ? `#/video/${encodeURIComponent(next.videoId)}`
+            : `#/${next.name}`;
     location.hash = hash;
     setRoute(next);
   }, []);
@@ -198,7 +203,7 @@ export function App() {
 
   const visibleRoutes = useMemo<Route['name'][]>(() => {
     if (!auth.isTeacher) {
-      return ['home', 'lesson', 'video', 'games', 'reels', 'rewards', 'support', 'settings'];
+      return ['home', 'lesson', 'videos', 'video', 'games', 'reels', 'rewards', 'support', 'settings'];
     }
     return ['teacher', 'settings'];
   }, [auth.isTeacher]);
@@ -235,13 +240,22 @@ export function App() {
           locale={locale}
           onExit={() => navigate({ name: 'home' })}
         />
+      ) : route.name === 'videos' ? (
+        <VideoLibrary
+          studentId={signedInStudentId}
+          locale={locale}
+          defaultBoardId={
+            auth.state.status === 'signed-in' ? auth.state.user.boardId : null
+          }
+          onVideoSelect={(videoId) => navigate({ name: 'video', videoId })}
+        />
       ) : route.name === 'video' ? (
         <VideoLecturePage
           videoId={route.videoId}
           studentId={signedInStudentId}
           locale={locale}
-          onExit={() => navigate({ name: 'home' })}
-          onLessonSelect={(lessonId) => navigate({ name: 'lesson', lessonId })}
+          onExit={() => navigate({ name: 'videos' })}
+          onVideoSelect={(videoId) => navigate({ name: 'video', videoId })}
         />
       ) : route.name === 'teacher' ? (
         <TeacherDashboard locale={locale} students={students} />
@@ -304,6 +318,13 @@ export function App() {
               onClick={() => navigate({ name: 'home' })}
             >
               📚 <span className="nav-label">{t('nav.lessons')}</span>
+            </button>
+            <button
+              type="button"
+              className={route.name === 'videos' || route.name === 'video' ? 'active' : ''}
+              onClick={() => navigate({ name: 'videos' })}
+            >
+              🎥 <span className="nav-label">{t('video.lectures')}</span>
             </button>
             <button
               type="button"
