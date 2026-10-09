@@ -18,6 +18,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { LoadedConfig } from '../config.js';
 import {
+  bhashiniProvider,
   googleProvider,
   myMemoryProvider,
   translateWithFallback,
@@ -160,7 +161,11 @@ export async function registerContentTranslateRoutes(
   // content translation works with no key and no billing.
   const providers =
     options.providers ??
-    [googleProvider(apiKeyOf(options)), myMemoryProvider()].filter((p) => p.ready());
+    [
+      googleProvider(apiKeyOf(options)),
+      myMemoryProvider(),
+      bhashiniProvider(process.env.BHASHINI_API_KEY ?? null),
+    ].filter((p) => p.ready());
 
   app.post(
     '/translate/content',

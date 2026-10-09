@@ -112,6 +112,62 @@ async function translateOne(text: string, target: string): Promise<string> {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Bhashini — Government of India, free key, no billing                         */
+/* -------------------------------------------------------------------------- */
+
+const BHASHINI_TRANSLATE = 'https://tts.bhashini.ai/v2/translate/batch';
+
+const BHASHINI_LANGUAGE: Record<string, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  bn: 'Bengali',
+  mr: 'Marathi',
+  te: 'Telugu',
+  ta: 'Tamil',
+  gu: 'Gujarati',
+  ur: 'Urdu',
+  kn: 'Kannada',
+  ml: 'Malayalam',
+  pa: 'Punjabi',
+  or: 'Odia',
+  as: 'Assamese',
+  ne: 'Nepali',
+  sa: 'Sanskrit',
+};
+
+/**
+ * Bhashini's batch endpoint takes a list and returns the same order, which is
+ * exactly the shape we need — one request per lesson rather than per string.
+ *
+ * It requires a key, but the key is free and needs no card, unlike Google's.
+ */
+export function bhashiniProvider(apiKey: string | null): TranslationProvider {
+  return {
+    name: 'bhashini',
+    ready: () => apiKey !== null && apiKey.length > 0,
+    async translate(texts, target) {
+      const outputLanguage = BHASHINI_LANGUAGE[target.split(/[-_]/)[0]!.toLowerCase()];
+      if (!outputLanguage) throw new Error(`bhashini unsupported target ${target}`);
+
+      const response = await fetch(BHASHINI_TRANSLATE, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'X-API-KEY': apiKey! },
+        body: JSON.stringify(
+          texts.map((inputText) => ({ inputText, inputLanguage: 'English', outputLanguage })),
+        ),
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok) throw new Error(`bhashini http ${response.status}`);
+      const payload = (await response.json()) as {
+        translatedSentences?: string[];
+      };
+      const list = payload.translatedSentences ?? [];
+      return texts.map((source, i) => list[i] || source);
+    },
+  };
+}
+
+/* -------------------------------------------------------------------------- */
 /* Chain                                                                      */
 /* -------------------------------------------------------------------------- */
 
