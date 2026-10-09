@@ -17,9 +17,12 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { LoadedConfig } from '../config.js';
-
-const GOOGLE_ENDPOINT =
-  'https://translation.googleapis.com/language/translate/v2';
+import {
+  googleProvider,
+  myMemoryProvider,
+  translateWithFallback,
+  type TranslationProvider,
+} from './providers.js';
 
 /**
  * A card, loosely typed: we validate the shape we care about and pass through
@@ -122,6 +125,12 @@ function collect(cards: unknown[]): CollectEntry[] {
   return entries;
 }
 
+function apiKeyOf(options: ContentTranslateRouteOptions): string | null {
+  return options.apiKey !== undefined
+    ? options.apiKey
+    : (process.env.GOOGLE_TRANSLATION_API_KEY ?? null);
+}
+
 function cacheKey(target: string, texts: string[]): string {
   let hash = 5381;
   for (const text of texts) {
@@ -139,22 +148,27 @@ const cache = new Map<string, string[]>();
 export interface ContentTranslateRouteOptions {
   config: LoadedConfig;
   apiKey?: string | null;
+  /** Overrides the provider chain; injected by tests. */
+  providers?: TranslationProvider[];
 }
 
 export async function registerContentTranslateRoutes(
   app: FastifyInstance,
   options: ContentTranslateRouteOptions,
 ): Promise<void> {
-  const apiKey =
-    options.apiKey !== undefined
-      ? options.apiKey
-      : (process.env.GOOGLE_TRANSLATION_API_KEY ?? null);
+  // Google when a key is configured (better quality), MyMemory otherwise, so
+  // content translation works with no key and no billing.
+  const providers =
+    options.providers ??
+    [googleProvider(apiKeyOf(options)), myMemoryProvider()].filter((p) => p.ready());
 
   app.post(
     '/translate/content',
     { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
     async (request, reply) => {
-      if (!apiKey) return reply.code(503).send({ error: 'translation_unavailable' });
+      if (providers.length === 0) {
+        return reply.code(503).send({ error: 'translation_unavailable' });
+      }
 
       const parsed = requestSchema.safeParse(request.body);
       if (!parsed.success) return reply.code(400).send({ error: 'invalid_request' });
@@ -168,49 +182,35 @@ export async function registerContentTranslateRoutes(
 
       if (!translated) {
         try {
-          const response = await fetch(GOOGLE_ENDPOINT, {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-              'x-goog-api-key': apiKey,
-            },
-            body: JSON.stringify({
-              q: entries.map((e) => e.text),
-              target,
-              format: 'text',
-            }),
-            signal: AbortSignal.timeout(30_000),
-          });
-          if (!response.ok) {
-            request.log.warn({ status: response.status, target }, 'content translate failed');
-            return reply.code(502).send({ error: 'upstream_error' });
-          }
-          const payload = (await response.json()) as {
-            data?: { translations?: Array<{ translatedText?: string }> };
-          };
-          const list = payload.data?.translations ?? [];
-          // Google can return fewer items than asked for; never write a
-          // translation that isn't there, or a card ends up blank.
-          if (list.length !== entries.length) {
+          const result = await translateWithFallback(
+            providers,
+            entries.map((e) => e.text),
+            target,
+            request.log,
+          );
+          // Any field the provider did not return keeps its original English
+          // rather than being blanked — a partly translated card is usable, an
+          // empty one is not.
+          translated = entries.map((entry, i) => result.translations[i] || entry.text);
+          if (result.translations.length !== entries.length) {
             request.log.warn(
-              { expected: entries.length, got: list.length, target },
-              'content translate count mismatch',
+              { expected: entries.length, got: result.translations.length, target },
+              'content translate partial response',
             );
-            return reply.code(502).send({ error: 'upstream_error' });
           }
-          translated = list.map((t) => t.translatedText ?? '');
           if (cache.size >= CACHE_LIMIT) {
             const oldest = cache.keys().next().value;
             if (oldest) cache.delete(oldest);
           }
           cache.set(key, translated);
+          reply.header('x-translation-provider', result.provider);
         } catch (error) {
-          request.log.warn({ err: error }, 'content translate threw');
+          request.log.warn({ err: error, target }, 'content translate failed');
           return reply.code(502).send({ error: 'upstream_error' });
         }
       }
 
-      entries.forEach((entry, index) => entry.write(translated![index] ?? entry.text));
+      entries.forEach((entry, index) => entry.write(translated![index] || entry.text));
 
       reply.header('cache-control', 'no-store');
       return { cards, translated: entries.length };

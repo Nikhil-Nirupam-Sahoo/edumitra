@@ -21,6 +21,36 @@ import type { LoadedConfig } from '../config.js';
 
 const SYNTH_ENDPOINT = 'https://texttospeech.googleapis.com/v1/text:synthesize';
 
+/**
+ * Bhashini (Government of India) — free, and the only genuinely free source I
+ * could find that has an Odia voice. Google TTS needs a billing account and
+ * Edge's voices stop at Hindi/Tamil/etc; Bhashini covers Odia and the rest of
+ * the Indic set. A free key (no card) raises the rate limits.
+ */
+const BHASHINI_ENDPOINT = 'https://tts.bhashini.ai/v2/synthesize';
+
+/** Bhashini names languages in full, not by code. */
+const BHASHINI_LANGUAGE: Record<string, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  bn: 'Bengali',
+  mr: 'Marathi',
+  te: 'Telugu',
+  ta: 'Tamil',
+  gu: 'Gujarati',
+  ur: 'Urdu',
+  kn: 'Kannada',
+  ml: 'Malayalam',
+  pa: 'Punjabi',
+  or: 'Odia',
+  as: 'Assamese',
+  ne: 'Nepali',
+  sa: 'Sanskrit',
+  mai: 'Maithili',
+  bod: 'Bodo',
+  doi: 'Dogri',
+};
+
 const requestSchema = z.object({
   text: z.string().min(1).max(3000),
   /** BCP-47 code, e.g. "hi", "or", "ta", "en-IN". */
@@ -98,6 +128,8 @@ export interface TtsRouteOptions {
   config: LoadedConfig;
   /** Overrides GOOGLE_TRANSLATION_API_KEY; injected by tests. */
   apiKey?: string | null;
+  /** Overrides BHASHINI_API_KEY; injected by tests. */
+  bhashiniKey?: string | null;
 }
 
 export async function registerTtsRoutes(
@@ -109,15 +141,31 @@ export async function registerTtsRoutes(
       ? options.apiKey
       : (process.env.GOOGLE_TRANSLATION_API_KEY ?? null);
 
-  app.get('/tts/status', async () => ({ enabled: apiKey !== null }));
+  /**
+   * Order matters: Google is the best voice but costs money to switch on,
+   * Bhashini is free and covers Odia. Whichever answers first wins.
+   */
+  const bhashiniKey =
+    options.bhashiniKey !== undefined
+      ? options.bhashiniKey
+      : (process.env.BHASHINI_API_KEY ?? null);
+  const engines = [
+    apiKey ? ('google' as const) : null,
+    bhashiniKey !== null ? ('bhashini' as const) : null,
+  ].filter((e): e is 'google' | 'bhashini' => e !== null);
+
+  app.get('/tts/status', async () => ({
+    enabled: engines.length > 0,
+    engines,
+  }));
 
   app.post(
     '/tts',
     // Audio is small but a busy classroom replays the same card repeatedly;
-    // a per-route bucket also keeps a runaway client from billing the key.
+    // a per-route bucket also keeps a runaway client from burning a free quota.
     { config: { rateLimit: { max: 120, timeWindow: '1 minute' } } },
     async (request, reply) => {
-      if (!apiKey) return reply.code(503).send({ error: 'tts_unavailable' });
+      if (engines.length === 0) return reply.code(503).send({ error: 'tts_unavailable' });
 
       const parsed = requestSchema.safeParse(request.body);
       if (!parsed.success) return reply.code(400).send({ error: 'invalid_request' });
@@ -134,49 +182,91 @@ export async function registerTtsRoutes(
         return reply.type(hit.contentType).send(hit.audio);
       }
 
-      const voice = resolveVoice(lang);
-      try {
-        const response = await fetch(`${SYNTH_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            input: { text },
-            voice,
-            audioConfig: {
-              audioEncoding: 'MP3',
-              speakingRate: rate ?? 0.95,
-            },
-          }),
-          signal: AbortSignal.timeout(20_000),
-        });
+      for (const engine of engines) {
+        try {
+          const audio =
+            engine === 'google'
+              ? await synthesiseGoogle(apiKey!, text, lang, rate)
+              : await synthesiseBhashini(bhashiniKey, text, lang, rate);
+          if (!audio) continue;
 
-        if (!response.ok) {
-          // A bad language code or a disabled API must not look like success.
-          request.log.warn({ status: response.status, lang }, 'tts upstream failed');
-          return reply.code(502).send({ error: 'upstream_error' });
+          if (cache.size >= CACHE_LIMIT) {
+            const oldest = cache.keys().next().value;
+            if (oldest) cache.delete(oldest);
+          }
+          cache.set(key, { audio, contentType: 'audio/mpeg' });
+
+          reply.header('x-tts-cache', 'miss');
+          reply.header('x-tts-engine', engine);
+          reply.header('cache-control', 'public, max-age=86400');
+          return reply.type('audio/mpeg').send(audio);
+        } catch (error) {
+          request.log.warn({ err: error, engine }, 'tts engine failed');
+          // Try the next engine before giving up.
         }
-
-        const payload = (await response.json()) as { audioContent?: string };
-        if (!payload.audioContent) {
-          return reply.code(502).send({ error: 'empty_audio' });
-        }
-
-        const audio = Buffer.from(payload.audioContent, 'base64');
-        if (cache.size >= CACHE_LIMIT) {
-          const oldest = cache.keys().next().value;
-          if (oldest) cache.delete(oldest);
-        }
-        cache.set(key, { audio, contentType: 'audio/mpeg' });
-
-        reply.header('x-tts-cache', 'miss');
-        reply.header('cache-control', 'public, max-age=86400');
-        return reply.type('audio/mpeg').send(audio);
-      } catch (error) {
-        request.log.warn({ err: error }, 'tts request failed');
-        return reply.code(502).send({ error: 'upstream_error' });
       }
+      return reply.code(502).send({ error: 'upstream_error' });
     },
   );
+}
+
+async function synthesiseGoogle(
+  apiKey: string,
+  text: string,
+  lang: string,
+  rate: number | undefined,
+): Promise<Buffer | null> {
+  const voice = resolveVoice(lang);
+  const response = await fetch(`${SYNTH_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      input: { text },
+      voice,
+      audioConfig: { audioEncoding: 'MP3', speakingRate: rate ?? 0.95 },
+    }),
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!response.ok) return null;
+  const payload = (await response.json()) as { audioContent?: string };
+  if (!payload.audioContent) return null;
+  return Buffer.from(payload.audioContent, 'base64');
+}
+
+/**
+ * Bhashini returns raw MP3. A free key goes in `X-API-KEY`; without one it
+ * still serves requests at a lower rate limit.
+ */
+async function synthesiseBhashini(
+  apiKey: string | null,
+  text: string,
+  lang: string,
+  rate: number | undefined,
+): Promise<Buffer | null> {
+  const base = lang.split(/[-_]/)[0]!.toLowerCase();
+  const language = BHASHINI_LANGUAGE[base];
+  if (!language) return null; // unsupported here; the device voice will do
+
+  const response = await fetch(BHASHINI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      ...(apiKey ? { 'X-API-KEY': apiKey } : {}),
+    },
+    body: JSON.stringify({
+      text,
+      language,
+      voiceName: 'Female1',
+      voiceStyle: 'Neutral',
+      ...(rate ? { speechRate: rate } : {}),
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!response.ok) {
+    throw new Error(`bhashini ${response.status}: ${(await response.text().catch(() => '')).slice(0, 120)}`);
+  }
+  const audio = Buffer.from(await response.arrayBuffer());
+  return audio.length > 0 ? audio : null;
 }
 
 export function clearTtsCache(): void {

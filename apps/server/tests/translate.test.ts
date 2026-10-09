@@ -12,6 +12,11 @@ import {
   clearTranslationCache,
   registerTranslateRoutes,
 } from '../src/translate/translate.controller.js';
+import {
+  googleProvider,
+  myMemoryProvider,
+  translateWithFallback,
+} from '../src/translate/providers.js';
 import type { LoadedConfig } from '../src/config.js';
 
 function configWith(key: string | null): LoadedConfig {
@@ -20,11 +25,17 @@ function configWith(key: string | null): LoadedConfig {
   } as LoadedConfig;
 }
 
+/**
+ * `providers` is injected so these tests never touch a real translation
+ * service. Passing [] models "nothing configured"; passing a Google provider
+ * models "a key is set".
+ */
 async function buildApp(key: string | null): Promise<FastifyInstance> {
   const app = Fastify({ logger: false });
+  const providers = key === null ? [] : [googleProvider(key)];
   await app.register(
     async (instance) => {
-      await registerTranslateRoutes(instance, { config: configWith(key) });
+      await registerTranslateRoutes(instance, { config: configWith(key), providers });
     },
     { prefix: '/api/v1' },
   );
@@ -33,18 +44,37 @@ async function buildApp(key: string | null): Promise<FastifyInstance> {
 }
 
 describe('GET /api/v1/translate/status', () => {
-  it('reports disabled when no key is configured', async () => {
+  it('reports disabled when no provider is available', async () => {
     const app = await buildApp(null);
     const response = await app.inject({ method: 'GET', url: '/api/v1/translate/status' });
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ enabled: false });
+    expect(response.json()).toEqual({ enabled: false, provider: null });
     await app.close();
   });
 
-  it('reports enabled when a key is configured', async () => {
+  it('reports enabled and names the provider when one is configured', async () => {
     const app = await buildApp('server-side-key');
     const response = await app.inject({ method: 'GET', url: '/api/v1/translate/status' });
-    expect(response.json()).toEqual({ enabled: true });
+    expect(response.json()).toEqual({ enabled: true, provider: 'google' });
+    await app.close();
+  });
+
+  it('reports enabled with the free provider when no Google key is set', async () => {
+    // This is the default deployment: MyMemory needs no key and no billing, so
+    // live translation is available out of the box.
+    const app = Fastify({ logger: false });
+    await app.register(
+      async (instance) => {
+        await registerTranslateRoutes(instance, {
+          config: configWith(null),
+          providers: [myMemoryProvider()],
+        });
+      },
+      { prefix: '/api/v1' },
+    );
+    await app.ready();
+    const response = await app.inject({ method: 'GET', url: '/api/v1/translate/status' });
+    expect(response.json()).toEqual({ enabled: true, provider: 'mymemory' });
     await app.close();
   });
 });
@@ -120,7 +150,7 @@ describe('POST /api/v1/translate', () => {
     await app.close();
   });
 
-  it('serves repeat requests from cache without calling Google again', async () => {
+  it('serves repeat requests from cache without calling the provider again', async () => {
     const fetchMock = vi.fn(async () =>
       new Response(
         JSON.stringify({ data: { translations: [{ translatedText: 'Bonjour' }] } }),
@@ -137,7 +167,11 @@ describe('POST /api/v1/translate', () => {
 
     expect(first.json().cached).toBe(false);
     expect(second.json().cached).toBe(true);
-    expect(second.json().translations).toEqual(['Bonjour']);
+    // The provider is named on the uncached response so the client can show it.
+    expect(first.headers['x-translation-provider']).toBe('google');
+    // The stub only returns one translation for two strings: the gap falls
+    // back to the English source rather than the whole request failing.
+    expect(second.json().translations).toEqual(['Bonjour', 'Goodbye']);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await app.close();
   });

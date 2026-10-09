@@ -1,0 +1,129 @@
+/**
+ * Translation providers, best-available first.
+ *
+ * Google Cloud Translation is the highest quality but requires a billing
+ * account, which is a non-starter for a school project. MyMemory is free,
+ * needs no key and no billing, and handles every Indian language we ship
+ * (verified against Odia and Hindi), so it is the default. Adding a Google key
+ * transparently upgrades quality — nothing else changes.
+ *
+ * Both live behind one interface so the routes do not care which is answering,
+ * and a provider that fails or is exhausted falls through to the next rather
+ * than surfacing an error to a student mid-lesson.
+ */
+
+export interface TranslationProvider {
+  readonly name: string;
+  /** True when enough strings to be worth a call. */
+  ready(): boolean;
+  translate(texts: string[], target: string): Promise<string[]>;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Google Cloud Translation                                                    */
+/* -------------------------------------------------------------------------- */
+
+const GOOGLE_ENDPOINT = 'https://translation.googleapis.com/language/translate/v2';
+
+export function googleProvider(apiKey: string | null): TranslationProvider {
+  return {
+    name: 'google',
+    ready: () => apiKey !== null && apiKey.length > 0,
+    async translate(texts, target) {
+      const response = await fetch(GOOGLE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey! },
+        body: JSON.stringify({ q: texts, target, format: 'text' }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok) throw new Error(`google ${response.status}`);
+      const payload = (await response.json()) as {
+        data?: { translations?: Array<{ translatedText?: string }> };
+      };
+      const list = payload.data?.translations ?? [];
+      // A provider may return fewer items than asked for. Falling back to the
+      // source string keeps the request useful — one untranslated string beats
+      // no translation at all — and callers never write a blank field.
+      return texts.map((source, i) => list[i]?.translatedText || source);
+    },
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* MyMemory — free, no key, no billing                                         */
+/* -------------------------------------------------------------------------- */
+
+const MYMEMORY_ENDPOINT = 'https://api.mymemory.translated.net/get';
+
+/** MyMemory answers a bad language pair with an error *inside* the text. */
+const MYMEMORY_ERROR = 'INVALID TARGET LANGUAGE';
+
+/**
+ * MyMemory takes one query per request, so a lesson's strings are translated
+ * concurrently and in small batches. Anonymous quota is ~5000 words/day,
+ * which is why the caller's cache matters more here than with Google.
+ */
+export function myMemoryProvider(batchSize = 4): TranslationProvider {
+  return {
+    name: 'mymemory',
+    ready: () => true,
+    async translate(texts, target) {
+      const out: string[] = [];
+      for (let i = 0; i < texts.length; i += batchSize) {
+        const batch = texts.slice(i, i + batchSize);
+        const translated = await Promise.all(batch.map((t) => translateOne(t, target)));
+        out.push(...translated);
+      }
+      return out;
+    },
+  };
+}
+
+async function translateOne(text: string, target: string): Promise<string> {
+  const url =
+    `${MYMEMORY_ENDPOINT}?q=${encodeURIComponent(text)}` +
+    `&langpair=en%7C${encodeURIComponent(target)}`;
+  const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+  if (!response.ok) throw new Error(`mymemory ${response.status}`);
+  const payload = (await response.json()) as {
+    responseStatus?: number | string;
+    responseData?: { translatedText?: string };
+    quotaFinished?: boolean;
+  };
+  const result = payload.responseData?.translatedText;
+  if (!result) throw new Error('mymemory empty');
+  // Both of these mean "no translation happened" — returning them would put
+  // the API's error text into a lesson card.
+  if (String(payload.responseStatus) !== '200' || payload.quotaFinished === true) {
+    throw new Error('mymemory unavailable');
+  }
+  if (result.includes(MYMEMORY_ERROR)) throw new Error('mymemory bad language');
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Chain                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Returns the first provider that answers, so a quota-exhausted free tier
+ * still produces a translated lesson rather than an error.
+ */
+export async function translateWithFallback(
+  providers: TranslationProvider[],
+  texts: string[],
+  target: string,
+  log?: { warn: (meta: unknown, msg: string) => void },
+): Promise<{ provider: string; translations: string[] }> {
+  let lastError: unknown = null;
+  for (const provider of providers) {
+    if (!provider.ready()) continue;
+    try {
+      return { provider: provider.name, translations: await provider.translate(texts, target) };
+    } catch (error) {
+      lastError = error;
+      log?.warn({ err: error, provider: provider.name }, 'translation provider failed');
+    }
+  }
+  throw lastError ?? new Error('no translation provider available');
+}

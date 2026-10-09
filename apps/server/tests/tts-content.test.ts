@@ -65,16 +65,18 @@ describe('resolveVoice', () => {
 });
 
 describe('GET /api/v1/tts/status', () => {
-  it('reports disabled without a key and enabled with one', async () => {
+  it('reports no engines when nothing is configured, and names them otherwise', async () => {
     const off = await build(null);
     expect((await off.inject({ method: 'GET', url: '/api/v1/tts/status' })).json()).toEqual({
       enabled: false,
+      engines: [],
     });
     await off.close();
 
     const on = await build('k');
     expect((await on.inject({ method: 'GET', url: '/api/v1/tts/status' })).json()).toEqual({
       enabled: true,
+      engines: ['google'],
     });
     await on.close();
   });
@@ -245,17 +247,55 @@ describe('POST /api/v1/translate/content', () => {
     return mock;
   }
 
-  it('returns 503 with no key and never calls Google', async () => {
-    const fetchSpy = vi.fn();
+  it('uses the free provider when no Google key is set', async () => {
+    // The default deployment: no key, no billing, and content still translates.
+    const fetchSpy = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            responseStatus: 200,
+            responseData: { translatedText: 'ଅନୁଦିତ' },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+    );
     vi.stubGlobal('fetch', fetchSpy);
     const app = await build(null);
     const response = await app.inject({
       method: 'POST',
       url: '/api/v1/translate/content',
-      payload: { target: 'or', cards: CARDS },
+      payload: { target: 'or', cards: [{ id: 'c1', type: 'text', body: 'hello' }] },
     });
-    expect(response.statusCode).toBe(503);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['x-translation-provider']).toBe('mymemory');
+    expect((response.json() as { cards: Array<{ body: string }> }).cards[0]!.body).toBe('ଅନୁଦିତ');
+    await app.close();
+  });
+
+  it('never puts a provider error message into a lesson card', async () => {
+    // MyMemory signals a bad language pair with HTTP 200 and an explanatory
+    // sentence inside the text field.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              responseStatus: 400,
+              responseData: { translatedText: "'XX' IS AN INVALID TARGET LANGUAGE" },
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          ),
+      ),
+    );
+    const app = await build(null);
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/translate/content',
+      payload: { target: 'xx', cards: [{ id: 'c1', type: 'text', body: 'hello' }] },
+    });
+    // A failure must not leak provider chatter into the curriculum.
+    expect(response.statusCode).toBe(502);
     await app.close();
   });
 
@@ -343,17 +383,21 @@ describe('POST /api/v1/translate/content', () => {
     await app.close();
   });
 
-  it('refuses a short response rather than blanking a card', async () => {
-    // Google returned fewer items than asked for; writing these would leave
-    // the last card with no text at all.
-    stubGoogle(['only one']);
+  it('keeps the English source for fields a partial response omitted', async () => {
+    // Only one of six strings comes back. The card must still be usable: the
+    // translated field becomes Odia, every gap keeps its original English.
+    stubGoogle(['ପ୍ରଥମ']);
     const app = await build('k');
     const response = await app.inject({
       method: 'POST',
       url: '/api/v1/translate/content',
       payload: { target: 'or', cards: CARDS },
     });
-    expect(response.statusCode).toBe(502);
+    expect(response.statusCode).toBe(200);
+    const { cards } = response.json() as { cards: typeof CARDS };
+    expect(cards[0]!.title).toBe('ପ୍ରଥମ');
+    expect(cards[0]!.body).toBe('An equation whose highest power of the variable is one.');
+    expect(cards[1]!.options?.[0]?.text).toBe('one third');
     await app.close();
   });
 

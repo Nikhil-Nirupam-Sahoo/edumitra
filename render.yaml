@@ -34,20 +34,18 @@ services:
       # Generated once at blueprint apply; injected at runtime AND bake-time.
       - key: SYNC_SIGNING_SECRET
         generateValue: true
-      # ONE key, THREE features. Enable all of these for the key in Google
-      # Cloud → APIs & Services → Library:
-      #   * Cloud Translation API   -> translating the UI
-      #   * Cloud Text-to-Speech API -> read-aloud, incl. Odia (or-IN)
-      #   (content translation rides on Cloud Translation)
-      #
-      # SECURITY: paste the key here only, and restrict it in Google Cloud to
-      # this service's egress IPs. It is read by the server and never sent to
-      # the browser — the client calls /api/v1/translate, /api/v1/translate/content
-      # and /api/v1/tts, and this server proxies all three.
-      #
-      # Leave it unset and the app still works: bundled locales (en/hi/ta/or)
-      # and the device's own speech voices take over.
+      # TRANSLATION — free with NO key and NO billing.
+      # Unset, translation runs through MyMemory and the UI *and* the lesson
+      # content translate out of the box. Setting this switches to Google for
+      # better quality, but Google requires a billing account, so it stays
+      # optional. Never put it in client code: the browser calls
+      # /api/v1/translate and /api/v1/translate/content and this server proxies.
       - key: GOOGLE_TRANSLATION_API_KEY
+        sync: false
+      # READ-ALOUD — optional, and the only free source with an Odia voice.
+      # Free key, no card: https://bhashini.gov.in/ulca (Government of India).
+      # Unset, read-aloud falls back to the device's own speech voices.
+      - key: BHASHINI_API_KEY
         sync: false
       # AI tutor (Help tab). Same rule as the translation key: paste it here,
       # never into client code. The browser calls /api/v1/support/ask and this
