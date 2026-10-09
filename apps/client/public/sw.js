@@ -1,5 +1,5 @@
 // Edumitra service worker — cache-first app shell for full offline operation.
-const CACHE = 'edumitra-v1';
+const CACHE = 'edumitra-v2';
 const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg'];
 
 self.addEventListener('install', (event) => {
