@@ -47,6 +47,16 @@ services:
       # Unset, read-aloud falls back to the device's own speech voices.
       - key: BHASHINI_API_KEY
         sync: false
+      # Sign in with Google. A client ID, not a secret — public by design, and
+      # verified server-side on every sign-in. Free, no billing. Unset hides the
+      # Google button. Create it as an OAuth client ID of type "Web application"
+      # with this service URL as an authorised JavaScript origin.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      # Self-registration is open by default; teacher accounts need this set to
+      # "true" because a teacher decides what a class can see.
+      - key: ALLOW_TEACHER_SIGNUP
+        value: 'false'
       # AI tutor (Help tab). Same rule as the translation key: paste it here,
       # never into client code. The browser calls /api/v1/support/ask and this
       # server proxies to Anthropic. Unset → the Help tab says the tutor is not

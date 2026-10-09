@@ -7,8 +7,12 @@
  */
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { z } from 'zod';
 import type { AuthService, PublicUser, Role, UserRecord } from './auth.service.js';
-import { loginSchema } from './auth.service.js';
+import {
+  loginSchema,
+  registerSchema,
+} from './auth.service.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -25,6 +29,10 @@ function bearer(request: FastifyRequest): string | undefined {
 
 export interface AuthRouteOptions {
   auth: AuthService;
+  /** Google Sign-In client id; null hides the Google button. */
+  googleClientId?: string | null;
+  /** Allow self-registration to create teacher accounts. */
+  allowTeacherSignup?: boolean;
 }
 
 /**
@@ -56,6 +64,59 @@ export async function registerAuthRoutes(
   const { auth } = options;
 
   registerAuthHook(app, auth);
+
+  /**
+   * Which sign-in methods this deployment actually offers. The client renders
+   * the Google button only when a client id is configured, so an unconfigured
+   * deployment never shows a button that cannot work.
+   */
+  app.get('/auth/providers', async () => ({
+    password: true,
+    google: options.googleClientId ?? null,
+    allowTeacherSignup: options.allowTeacherSignup === true,
+  }));
+
+  /**
+   * Self-registration. Teacher accounts are refused unless the deployment opts
+   * in, because a teacher decides what a class can see.
+   */
+  app.post('/auth/register', async (request, reply) => {
+    const parsed = registerSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'invalid_request', issues: parsed.error.issues });
+    }
+    const result = await auth.register(parsed.data, {
+      allowTeacherAccounts: options.allowTeacherSignup === true,
+    });
+    if (!result.ok) {
+      return reply
+        .code(result.reason === 'username_taken' ? 409 : 403)
+        .send({ error: result.reason });
+    }
+    return { token: result.token, user: result.user };
+  });
+
+  /**
+   * Google sign-in. The browser sends the ID token Google gave it; the server
+   * is what verifies it, so a forged token never becomes a session.
+   */
+  app.post('/auth/google', async (request, reply) => {
+    const clientId = options.googleClientId;
+    if (!clientId) return reply.code(503).send({ error: 'google_disabled' });
+
+    const parsed = z
+      .object({ idToken: z.string().min(20).max(4000) })
+      .safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: 'invalid_request' });
+
+    const profile = await auth.verifyGoogleIdToken(parsed.data.idToken, clientId);
+    if (!profile.ok) {
+      return reply.code(401).send({ error: profile.reason });
+    }
+
+    const result = await auth.findOrCreateGoogleUser(profile);
+    return { token: result.token, user: result.user, created: result.created };
+  });
 
   app.post('/auth/login', async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);

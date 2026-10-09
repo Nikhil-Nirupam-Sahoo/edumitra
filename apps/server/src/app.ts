@@ -156,7 +156,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   await app.register(
     async (instance) => {
-      await registerAuthRoutes(instance, { auth });
+      await registerAuthRoutes(instance, {
+        auth,
+        googleClientId: config.googleClientId,
+        allowTeacherSignup: config.allowTeacherSignup,
+      });
     },
     { prefix: '/api/v1' },
   );

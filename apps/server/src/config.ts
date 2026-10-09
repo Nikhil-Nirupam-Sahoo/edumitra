@@ -53,6 +53,15 @@ const envSchema = z.object({
    * the bundled locales as the only translation source (app still works).
    */
   GOOGLE_TRANSLATION_API_KEY: z.string().optional(),
+  /**
+   * Google Sign-In client id. Deliberately an ID, not a secret: the ID-token
+   * flow needs no client secret, and this value is public by design — the
+   * browser has to know it to launch the Google button. It is verified
+   * server-side on every sign-in, so a wrong one is rejected there.
+   */
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  /** "true" lets self-registration create teacher accounts. Off by default. */
+  ALLOW_TEACHER_SIGNUP: z.string().optional(),
   /** Comma-separated allowed CORS origins; "*" allows all (dev only). */
   CORS_ORIGINS: z.string().default('*'),
   LOG_LEVEL: z
@@ -102,6 +111,10 @@ export interface LoadedConfig {
    * Null disables live translation (the bundled locales remain).
    */
   googleTranslationApiKey: string | null;
+  /** Google Sign-In client id; null disables the Google button. */
+  googleClientId: string | null;
+  /** Allow a self-registration to create a teacher account. Off by default. */
+  allowTeacherSignup: boolean;
   isProduction: boolean;
   isTest: boolean;
 }
@@ -201,6 +214,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): LoadedConfig {
       value.GOOGLE_TRANSLATION_API_KEY && value.GOOGLE_TRANSLATION_API_KEY.length > 0
         ? value.GOOGLE_TRANSLATION_API_KEY
         : null,
+    googleClientId:
+      value.GOOGLE_CLIENT_ID && value.GOOGLE_CLIENT_ID.length > 0 ? value.GOOGLE_CLIENT_ID : null,
+    // Teacher accounts decide what a class can see, so they are provisioned
+    // rather than self-served. A single-operator deployment can flip this on.
+    allowTeacherSignup: value.ALLOW_TEACHER_SIGNUP === 'true',
     isProduction,
     isTest: value.NODE_ENV === 'test',
     // Built PWA location: overridable, defaults to the repo's client build

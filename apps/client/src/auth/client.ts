@@ -55,6 +55,60 @@ function writeStored(session: StoredSession | null): void {
   }
 }
 
+export interface SignUpInput {
+  username: string;
+  password: string;
+  displayName: string;
+  role?: Role;
+}
+
+/**
+ * Creates an account and signs straight in, so a new student is never asked to
+ * log in with credentials they just typed.
+ */
+export async function signUpRequest(
+  input: SignUpInput,
+): Promise<{ user: SessionUser; token: string }> {
+  const response = await fetch(`${API_BASE}/auth/register`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      username: input.username,
+      password: input.password,
+      confirmPassword: input.password,
+      displayName: input.displayName,
+      role: input.role ?? 'student',
+    }),
+  });
+  if (response.status === 409) throw new Error('username_taken');
+  if (response.status === 403) throw new Error('role_not_allowed');
+  if (!response.ok) throw new Error('register_failed');
+  return (await response.json()) as { user: SessionUser; token: string };
+}
+
+/**
+ * Exchanges a Google ID token for one of our own sessions.
+ *
+ * The browser does not trust the token itself — the server verifies it, which
+ * is the whole point of routing it through here.
+ */
+export async function googleLoginRequest(
+  idToken: string,
+): Promise<{ user: SessionUser; token: string }> {
+  const response = await fetch(`${API_BASE}/auth/google`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  if (response.status === 401) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? 'invalid_token');
+  }
+  if (response.status === 503) throw new Error('google_disabled');
+  if (!response.ok) throw new Error('google_login_failed');
+  return (await response.json()) as { user: SessionUser; token: string };
+}
+
 export async function loginRequest(
   username: string,
   password: string,
@@ -72,6 +126,8 @@ export async function loginRequest(
 export interface AuthController {
   state: AuthState;
   signIn: (username: string, password: string) => Promise<void>;
+  signUp: (input: SignUpInput) => Promise<void>;
+  signInWithGoogle: (idToken: string) => Promise<void>;
   signOut: () => void;
   isTeacher: boolean;
   isStudent: boolean;
@@ -112,11 +168,34 @@ export function useAuth(): AuthController {
     if (stored) void revalidate(stored.token, stored.user);
   }, [revalidate]);
 
-  const signIn = useCallback(async (username: string, password: string) => {
-    const result = await loginRequest(username, password);
+  const applySession = useCallback((result: { user: SessionUser; token: string }) => {
     writeStored({ token: result.token, user: result.user, checkedAt: Date.now() });
     setState({ status: 'signed-in', user: result.user, token: result.token });
   }, []);
+
+  const signIn = useCallback(
+    async (username: string, password: string) => {
+      const result = await loginRequest(username, password);
+      applySession(result);
+    },
+    [applySession],
+  );
+
+  const signUp = useCallback(
+    async (input: SignUpInput) => {
+      const result = await signUpRequest(input);
+      applySession(result);
+    },
+    [applySession],
+  );
+
+  const signInWithGoogle = useCallback(
+    async (idToken: string) => {
+      const result = await googleLoginRequest(idToken);
+      applySession(result);
+    },
+    [applySession],
+  );
 
   const signOut = useCallback(() => {
     writeStored(null);
@@ -127,6 +206,8 @@ export function useAuth(): AuthController {
     () => ({
       state,
       signIn,
+      signUp,
+      signInWithGoogle,
       signOut,
       isTeacher: state.status === 'signed-in' && state.user.role === 'teacher',
       isStudent: state.status === 'signed-in' && state.user.role === 'student',

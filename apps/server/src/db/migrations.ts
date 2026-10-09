@@ -149,4 +149,23 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_support_requests_status ON support_requests (status, created_at);
     `,
   },
+  {
+    id: '0006_users_auth_provider',
+    sql: `
+      -- Self-registration and Google sign-in.
+      --
+      -- auth_provider records how the account authenticates ('password' or
+      -- 'google') so an account created by Google is never asked for a
+      -- password, and one created with a password is never offered Google.
+      --
+      -- google_sub is Google's stable account id: unlike an email address it
+      -- never changes, so it is what an account is linked by. The unique index
+      -- is what stops one Google account creating two local users.
+      ALTER TABLE users ADD COLUMN email TEXT;
+      ALTER TABLE users ADD COLUMN google_sub TEXT;
+      ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'password';
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users (google_sub);
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+    `,
+  },
 ];
