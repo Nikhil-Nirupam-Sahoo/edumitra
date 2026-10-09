@@ -58,6 +58,36 @@ export function App() {
   const [studentId, setStudentId] = useState('student-aarav');
   const { t } = useMemo(() => createTranslator(locale), [locale]);
 
+  /**
+   * `navigator.onLine` only reports "is there a network interface" — it lies
+   * on captive portals, dead Wi-Fi and some mobile networks, which is why the
+   * app used to claim to be offline while sitting on a working connection.
+   * Treat the device as online if EITHER the browser says so OR a real request
+   * to our own health endpoint succeeds; only a confirmed failure plus a
+   * reported-down interface marks us offline.
+   */
+  const probeConnectivity = useCallback(async () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setOnline(false);
+      return;
+    }
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      const response = await fetch('/api/v1/health', {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      setOnline(response.ok);
+    } catch {
+      // Probe failed. Keep the optimistic "online" view unless the browser
+      // explicitly reports no network — the app is fully usable offline
+      // either way, so an alarming banner would be misleading.
+      if (typeof navigator === 'undefined' || navigator.onLine) setOnline(true);
+    }
+  }, []);
+
   // ---- Boot: seed local content, start sync, wire connectivity -----------
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -71,16 +101,19 @@ export function App() {
       const engine = getSyncEngine();
       unsubscribe = engine.watch();
     })();
-    const onOnline = () => setOnline(true);
+    const onOnline = () => void probeConnectivity();
     const onOffline = () => setOnline(false);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
+    void probeConnectivity();
+    const poll = window.setInterval(() => void probeConnectivity(), 60_000);
     return () => {
       unsubscribe?.();
+      window.clearInterval(poll);
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
-  }, []);
+  }, [probeConnectivity]);
 
   useEffect(() => {
     const onHashChange = () => setRoute(parseRoute(location.hash));

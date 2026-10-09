@@ -64,6 +64,23 @@ const IDLE: StoreState = {
 };
 
 let current: StoreState = IDLE;
+
+/**
+ * Public snapshot handed to React. MUST be referentially stable between real
+ * changes: `useSyncExternalStore` compares snapshots with `Object.is`, so
+ * building a new object on every read causes an infinite render loop (React
+ * then tears the tree down → blank screen). Rebuilt only inside mutate().
+ */
+let snapshot: GamificationSnapshot = toSnapshot(IDLE);
+
+function toSnapshot(state: StoreState): GamificationSnapshot {
+  return {
+    status: state.status,
+    studentId: state.studentId,
+    state: state.state,
+  };
+}
+
 const listeners = new Set<() => void>();
 
 function notify(): void {
@@ -74,6 +91,7 @@ function notify(): void {
 
 function mutate(next: (state: StoreState) => StoreState): void {
   current = next(current);
+  snapshot = toSnapshot(current);
   notify();
 }
 
@@ -221,6 +239,7 @@ export function recordLessonComplete(args: {
 /** Clear in-memory state after a full data reset (Settings → Reset). */
 export function resetGamificationStore(): void {
   current = IDLE;
+  snapshot = toSnapshot(current);
   notify();
 }
 
@@ -234,7 +253,6 @@ export function subscribe(listener: () => void): () => void {
 }
 
 export function getSnapshot(): GamificationSnapshot {
-  const { events: _events, ...snapshot } = current;
   return snapshot;
 }
 
