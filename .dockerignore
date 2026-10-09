@@ -2,7 +2,14 @@
 .git
 **/node_modules
 **/dist
-**/data
+# SQLite data directory (server local storage) — NOT the lesson content in
+# apps/client/src/content/data, which must ship with the image. Scoped to the
+# server's storage path and the repo root so content JSON is never excluded.
+apps/server/data
+data
+*.db
+*.sqlite
+*.sqlite3
 **/*.log
 .env
 **/.env
