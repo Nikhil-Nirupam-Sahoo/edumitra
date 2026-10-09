@@ -13,6 +13,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { LanguagePicker } from '../src/modules/settings/LanguagePicker';
 import { clearRemoteForTests, putRemoteBundleForTests } from '../src/i18n/remote';
+import { SUPPORTED_LOCALES } from '../src/i18n';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -75,8 +76,13 @@ describe('LanguagePicker', () => {
     render();
     await flush();
 
+    // Derived from SUPPORTED_LOCALES so a newly bundled language appears here
+    // automatically — this asserts every one of them is offered and enabled.
     const chips = bundledChips();
-    expect(chips.map((c) => c.textContent?.trim())).toEqual(['English', 'हिन्दी', 'தமிழ்']);
+    expect(chips.map((c) => c.textContent?.trim())).toEqual(
+      SUPPORTED_LOCALES.map((l) => l.label),
+    );
+    expect(chips.length).toBeGreaterThanOrEqual(4);
     for (const chip of chips) expect(chip.disabled).toBe(false);
   });
 

@@ -12,26 +12,38 @@
 import en from './locales/en.json';
 import hi from './locales/hi.json';
 import ta from './locales/ta.json';
+import or from './locales/or.json';
 import { getRemoteBundle, hasRemoteBundle } from './remote';
 
 /**
- * A UI language code. The three bundled locales are enumerated for autocompletion,
+ * A UI language code. The bundled locales are enumerated for autocompletion,
  * but any code with a live-translated bundle (see `remote.ts`) is valid too.
  */
-export type LocaleCode = 'en' | 'hi' | 'ta' | (string & {});
+export type LocaleCode = 'en' | 'hi' | 'ta' | 'or' | (string & {});
 
 export type Bundle = Record<string, string>;
 
-const BUNDLES: Record<string, Bundle> = { en, hi, ta };
+const BUNDLES: Record<string, Bundle> = { en, hi, ta, or };
 
+/**
+ * Bundled languages — shipped in the app, so they work offline with no key and
+ * no network. Adding a language here means writing its full bundle under
+ * ./locales/; `i18n.test.ts` fails if a bundle is missing any English key, so a
+ * half-finished translation can never ship.
+ */
 export const SUPPORTED_LOCALES: Array<{ code: LocaleCode; label: string }> = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'हिन्दी' },
   { code: 'ta', label: 'தமிழ்' },
+  { code: 'or', label: 'ଓଡ଼ିଆ' },
 ];
 
-/** Languages that ship audio cues; UI-only locales fall back to silent cues. */
-export const AUDIO_LOCALES: readonly LocaleCode[] = ['en', 'hi', 'ta'];
+/**
+ * Languages that ship audio cues, plus those read aloud by the Web Speech
+ * fallback — either way the voice is paced slightly slower than English, since
+ * a student learning in a second language needs the extra beat.
+ */
+export const AUDIO_LOCALES: readonly LocaleCode[] = ['en', 'hi', 'ta', 'or'];
 
 export interface TranslateOptions {
   /** Interpolation values, e.g. { count: 3 }. */
