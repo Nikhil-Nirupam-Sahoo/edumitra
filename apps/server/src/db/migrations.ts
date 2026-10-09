@@ -100,30 +100,6 @@ export const MIGRATIONS: readonly Migration[] = [
         device_id TEXT
       );
       CREATE INDEX IF NOT EXISTS idx_tombstones_purged ON purged_tombstones (purged_at);
-
-      -- Lessons: curriculum content synced from server.
-      CREATE TABLE IF NOT EXISTS lessons (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        language TEXT NOT NULL,
-        version INTEGER NOT NULL,
-        content_json TEXT NOT NULL,
-        updated_at BIGINT NOT NULL,
-        grade INTEGER,
-        subject TEXT,
-        content_version INTEGER DEFAULT 1
-      );
-      CREATE INDEX IF NOT EXISTS idx_lessons_grade_subject ON lessons (grade, subject);
-
-      -- Students: roster managed by teacher or self-registration.
-      CREATE TABLE IF NOT EXISTS students (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        class_id TEXT NOT NULL,
-        guardian_phone TEXT,
-        created_at BIGINT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_students_class ON students (class_id);
     `,
   },
   {
@@ -222,9 +198,13 @@ export const MIGRATIONS: readonly Migration[] = [
       -- languages_json: audio track availability per language
       -- thumbnail_webp: compressed thumbnail stored locally
       -- duration_sec: for UI and progress tracking
+      --
+      -- lesson_id/topic_id point at a content-pack lesson. The server never owns
+      -- the lessons table, so these are plain nullable columns — NOT foreign keys,
+      -- which would make this migration fail on a database created before it.
       CREATE TABLE IF NOT EXISTS video_lectures (
         id TEXT PRIMARY KEY,
-        lesson_id TEXT REFERENCES lessons(id),
+        lesson_id TEXT,
         topic_id TEXT,
         title TEXT NOT NULL,
         description TEXT,
