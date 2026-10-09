@@ -206,7 +206,9 @@ export async function registerContentTranslateRoutes(
           reply.header('x-translation-provider', result.provider);
         } catch (error) {
           request.log.warn({ err: error, target }, 'content translate failed');
-          return reply.code(502).send({ error: 'upstream_error' });
+          const reason = error instanceof Error ? error.message : 'unknown';
+          reply.header('x-translation-error', reason.slice(0, 160));
+          return reply.code(502).send({ error: 'upstream_error', reason });
         }
       }
 

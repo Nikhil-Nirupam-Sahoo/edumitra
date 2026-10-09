@@ -83,19 +83,29 @@ async function translateOne(text: string, target: string): Promise<string> {
   const url =
     `${MYMEMORY_ENDPOINT}?q=${encodeURIComponent(text)}` +
     `&langpair=en%7C${encodeURIComponent(target)}`;
-  const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
-  if (!response.ok) throw new Error(`mymemory ${response.status}`);
+  const response = await fetch(url, {
+    headers: {
+      // Some CDNs reject the default Node user-agent outright.
+      'user-agent': 'EduMitra/1.0 (+https://github.com/Nikhil-Nirupam-Sahoo/edumitra)',
+      accept: 'application/json',
+    },
+    signal: AbortSignal.timeout(25_000),
+  });
+  if (!response.ok) throw new Error(`mymemory http ${response.status}`);
   const payload = (await response.json()) as {
     responseStatus?: number | string;
     responseData?: { translatedText?: string };
+    responseDetails?: string;
     quotaFinished?: boolean;
   };
   const result = payload.responseData?.translatedText;
-  if (!result) throw new Error('mymemory empty');
+  if (!result) throw new Error('mymemory empty body');
   // Both of these mean "no translation happened" — returning them would put
   // the API's error text into a lesson card.
   if (String(payload.responseStatus) !== '200' || payload.quotaFinished === true) {
-    throw new Error('mymemory unavailable');
+    throw new Error(
+      `mymemory status ${String(payload.responseStatus)} quota=${String(payload.quotaFinished)}`,
+    );
   }
   if (result.includes(MYMEMORY_ERROR)) throw new Error('mymemory bad language');
   return result;
