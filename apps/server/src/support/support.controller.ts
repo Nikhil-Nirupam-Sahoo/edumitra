@@ -10,6 +10,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
+import { toNumber } from '../db/types.js';
 import { z } from 'zod';
 import type { LoadedConfig } from '../config.js';
 import type { DbPort } from '../db/index.js';
@@ -140,6 +141,9 @@ export async function registerSupportRoutes(
   );
 
   // ---- Mentor requests ---------------------------------------------------
+  // Postgres returns BIGINT as a string (it can exceed Number.MAX_SAFE_INTEGER
+  // in principle), SQLite as a number or bigint. Normalising here means the
+  // client always gets a millisecond number and never has to guess.
   app.post('/support/mentor-request', async (request, reply) => {
     // Anyone signed in can ask a mentor; anonymous spam is not worth storing.
     if (!request.auth) return reply.code(401).send({ error: 'unauthenticated' });
@@ -167,7 +171,7 @@ export async function registerSupportRoutes(
     const rows = await db.query<MentorRequest>(
       'SELECT id, student_name, subject, body, status, created_at FROM support_requests ORDER BY created_at DESC LIMIT 50',
     );
-    return { requests: rows };
+    return { requests: rows.map(withNumericCreatedAt) };
   });
 
   // Teacher closes the loop: mark a question answered so it leaves the inbox.
@@ -190,7 +194,7 @@ export async function registerSupportRoutes(
       'SELECT id, student_name, subject, body, status, created_at FROM support_requests WHERE student_id = ? ORDER BY created_at DESC LIMIT 20',
       [request.auth.user.id],
     );
-    return { requests: rows };
+    return { requests: rows.map(withNumericCreatedAt) };
   });
 }
 
@@ -201,6 +205,11 @@ export interface MentorRequest {
   body: string;
   status: string;
   created_at: number;
+}
+
+/** Coerces the driver's BIGINT representation to a plain millisecond number. */
+function withNumericCreatedAt(row: MentorRequest): MentorRequest {
+  return { ...row, created_at: toNumber(row.created_at) };
 }
 
 export interface Mentor {

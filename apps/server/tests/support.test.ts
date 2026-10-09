@@ -362,6 +362,30 @@ describe('mentor requests', () => {
     await close();
   });
 
+  it('returns created_at as a millisecond number, not a driver string', async () => {
+    // PostgreSQL returns BIGINT as a string; the client must not have to guess.
+    // Asserted on the row shape the browser receives.
+    const { app, close } = await build(null);
+    const aarav = await token(app, 'aarav');
+    await app.inject({
+      method: 'POST',
+      url: '/api/v1/support/mentor-request',
+      headers: { authorization: `Bearer ${aarav}` },
+      payload: { subject: 'Timestamp', body: 'Checking the shape' },
+    });
+
+    const mine = await app.inject({
+      method: 'GET',
+      url: '/api/v1/support/my-requests',
+      headers: { authorization: `Bearer ${aarav}` },
+    });
+    const created = (mine.json().requests as Array<{ created_at: unknown }>)[0]!.created_at;
+    expect(typeof created).toBe('number');
+    expect(created as number).toBeGreaterThan(1_600_000_000_000);
+    expect(created as number).toBeLessThan(4_000_000_000_000);
+    await close();
+  });
+
   it('404s when resolving an unknown question and 403s for a student', async () => {
     const { app, close } = await build(null);
     const aarav = await token(app, 'aarav');
