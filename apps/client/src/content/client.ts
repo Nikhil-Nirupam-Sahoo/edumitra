@@ -17,7 +17,7 @@ import { getLessons, setMeta, getMetaNumber, upsertLessons } from '../db/client'
 import type { LessonRecord, SyllabusGradeId, SyllabusSubjectId } from '../db/schema';
 import type { LessonCard } from '../modules/lesson/lessonModel';
 
-const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api/v1') as string;
+export const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api/v1') as string;
 const VERSION_KEY = 'content.version';
 const SCHEMA_KEY = 'content.schema';
 

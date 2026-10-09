@@ -17,6 +17,7 @@ import {
 import { LessonViewer } from './modules/lesson/LessonViewer';
 import { TeacherDashboard } from './modules/dashboard/TeacherDashboard';
 import { SettingsPanel } from './modules/settings/SettingsPanel';
+import { VideoLecturePage } from './video/VideoLecturePage';
 import { getSyncEngine } from './sync/syncEngine';
 import { HomeScreen } from './modules/home/HomeScreen';
 import { restoreRemoteLocales } from './i18n/remote';
@@ -32,6 +33,7 @@ import { resetGamificationStore } from './gamification/store';
 type Route =
   | { name: 'home' }
   | { name: 'lesson'; lessonId: string }
+  | { name: 'video'; videoId: string }
   | { name: 'teacher' }
   | { name: 'settings' }
   | { name: 'rewards' }
@@ -47,6 +49,10 @@ export function parseRoute(hash: string): Route {
   if (path.startsWith('lesson/')) {
     const lessonId = decodeURIComponent(path.slice('lesson/'.length));
     return lessonId ? { name: 'lesson', lessonId } : { name: 'home' };
+  }
+  if (path.startsWith('video/')) {
+    const videoId = decodeURIComponent(path.slice('video/'.length));
+    return videoId ? { name: 'video', videoId } : { name: 'home' };
   }
   if (path === 'teacher') return { name: 'teacher' };
   if (path === 'settings') return { name: 'settings' };
@@ -192,7 +198,7 @@ export function App() {
 
   const visibleRoutes = useMemo<Route['name'][]>(() => {
     if (!auth.isTeacher) {
-      return ['home', 'lesson', 'games', 'reels', 'rewards', 'support', 'settings'];
+      return ['home', 'lesson', 'video', 'games', 'reels', 'rewards', 'support', 'settings'];
     }
     return ['teacher', 'settings'];
   }, [auth.isTeacher]);
@@ -228,6 +234,14 @@ export function App() {
           studentId={signedInStudentId}
           locale={locale}
           onExit={() => navigate({ name: 'home' })}
+        />
+      ) : route.name === 'video' ? (
+        <VideoLecturePage
+          videoId={route.videoId}
+          studentId={signedInStudentId}
+          locale={locale}
+          onExit={() => navigate({ name: 'home' })}
+          onLessonSelect={(lessonId) => navigate({ name: 'lesson', lessonId })}
         />
       ) : route.name === 'teacher' ? (
         <TeacherDashboard locale={locale} students={students} />
