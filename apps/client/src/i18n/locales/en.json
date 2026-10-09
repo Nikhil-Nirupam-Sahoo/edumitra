@@ -246,5 +246,13 @@
   "video.choose_board": "Choose a board to see its lectures.",
   "video.subtitle_colour": "Subtitle colour",
   "video.subtitle_background": "Subtitle background",
-  "video.stream_note": "Videos stream online. Subtitles can be saved for offline use."
+  "video.stream_note": "Videos stream online. Subtitles can be saved for offline use.",
+  "settings.profile": "Profile",
+  "settings.font_size": "Text size",
+  "settings.text_smaller": "Smaller text",
+  "settings.text_bigger": "Bigger text",
+  "settings.profile_picture": "Profile picture",
+  "settings.change_picture": "Change picture",
+  "settings.remove_picture": "Remove picture",
+  "settings.picture_hint": "A small picture shown next to your name."
 }

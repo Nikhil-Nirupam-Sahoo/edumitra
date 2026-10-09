@@ -246,5 +246,13 @@
   "video.choose_board": "व्याख्यान देखने के लिए बोर्ड चुनें।",
   "video.subtitle_colour": "उपशीर्षक रंग",
   "video.subtitle_background": "उपशीर्षक पृष्ठभूमि",
-  "video.stream_note": "वीडियो ऑनलाइन स्ट्रीम होते हैं। उपशीर्षक ऑफ़लाइन के लिए सहेजे जा सकते हैं।"
+  "video.stream_note": "वीडियो ऑनलाइन स्ट्रीम होते हैं। उपशीर्षक ऑफ़लाइन के लिए सहेजे जा सकते हैं।",
+  "settings.profile": "प्रोफ़ाइल",
+  "settings.font_size": "अक्षर आकार",
+  "settings.text_smaller": "छोटे अक्षर",
+  "settings.text_bigger": "बड़े अक्षर",
+  "settings.profile_picture": "प्रोफ़ाइल चित्र",
+  "settings.change_picture": "चित्र बदलें",
+  "settings.remove_picture": "चित्र हटाएँ",
+  "settings.picture_hint": "आपके नाम के बगल में दिखने वाला एक छोटा चित्र।"
 }

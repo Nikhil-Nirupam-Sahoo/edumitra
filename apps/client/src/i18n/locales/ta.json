@@ -246,5 +246,13 @@
   "video.choose_board": "விரிவுரைகளைக் காண வாரியத்தைத் தேர்ந்தெடு.",
   "video.subtitle_colour": "துணைத் தலைப்பு நிறம்",
   "video.subtitle_background": "துணைத் தலைப்பு பின்னணி",
-  "video.stream_note": "வீடியோ ஆன்லைனில் இயங்கும். துணைத் தலைப்புகள் ஆஃப்லைனுக்கு சேமிக்கலாம்."
+  "video.stream_note": "வீடியோ ஆன்லைனில் இயங்கும். துணைத் தலைப்புகள் ஆஃப்லைனுக்கு சேமிக்கலாம்.",
+  "settings.profile": "சுயவிவரம்",
+  "settings.font_size": "எழுத்து அளவு",
+  "settings.text_smaller": "சிறிய எழுத்து",
+  "settings.text_bigger": "பெரிய எழுத்து",
+  "settings.profile_picture": "சுயவிவர படம்",
+  "settings.change_picture": "படத்தை மாற்று",
+  "settings.remove_picture": "படத்தை நீக்கு",
+  "settings.picture_hint": "உங்கள் பெயருக்கு அருகில் காட்டப்படும் சிறிய படம்."
 }

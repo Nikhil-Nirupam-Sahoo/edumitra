@@ -6,7 +6,7 @@
  * from the local queue so the numbers are always truthful, even offline.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { clearAllData, countPending, countSynced, estimateStorage, getLessons } from '../../db/client';
 import { redownloadContent } from '../../db/seed';
 import { installedContentVersion } from '../../content/client';
@@ -14,12 +14,19 @@ import { createTranslator, SUPPORTED_LOCALES, type LocaleCode } from '../../i18n
 import { getSyncEngine, type SyncResult } from '../../sync/syncEngine';
 import { getDeviceId } from '../../sync/deviceId';
 import { isSoundEnabled, setSoundEnabled } from '../../gamification/sfx';
+import { FONT_STEPS } from '../../appearance';
+import { imageToAvatarDataUrl } from '../../avatar';
+import type { SessionUser } from '../../auth/client';
 import { LanguagePicker } from './LanguagePicker';
 
 export interface SettingsPanelProps {
   locale: LocaleCode;
   onLocaleChange: (locale: LocaleCode) => void;
   onDataReset: () => void;
+  user: SessionUser;
+  fontSize: number;
+  onFontSizeChange: (scale: number) => void;
+  onAvatarChange: (dataUrl: string | null) => void;
 }
 
 interface QueueCounts {
@@ -29,7 +36,15 @@ interface QueueCounts {
   quotaBytes: number;
 }
 
-export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsPanelProps) {
+export function SettingsPanel({
+  locale,
+  onLocaleChange,
+  onDataReset,
+  user,
+  fontSize,
+  onFontSizeChange,
+  onAvatarChange,
+}: SettingsPanelProps) {
   const { t } = useMemo(() => createTranslator(locale), [locale]);
   const [counts, setCounts] = useState<QueueCounts>({
     pending: 0,
@@ -46,6 +61,35 @@ export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsP
   const [contentVersion, setContentVersion] = useState(0);
   const [contentLessons, setContentLessons] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const avatarInput = useRef<HTMLInputElement | null>(null);
+
+  const fontStepIndex = Math.max(
+    0,
+    FONT_STEPS.findIndex((s) => Math.abs(s - fontSize) < 0.02),
+  );
+
+  const changeFontSize = useCallback(
+    (delta: number) => {
+      const next = FONT_STEPS[Math.min(FONT_STEPS.length - 1, Math.max(0, fontStepIndex + delta))];
+      if (next !== undefined) onFontSizeChange(next);
+    },
+    [fontStepIndex, onFontSizeChange],
+  );
+
+  const pickAvatar = useCallback(
+    async (file: File | undefined) => {
+      if (!file) return;
+      setAvatarBusy(true);
+      try {
+        const dataUrl = await imageToAvatarDataUrl(file);
+        onAvatarChange(dataUrl); // null when it could not be decoded
+      } finally {
+        setAvatarBusy(false);
+      }
+    },
+    [onAvatarChange],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +190,71 @@ export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsP
       <section className="panel">
         <h2>{t('settings.language')}</h2>
         <LanguagePicker locale={locale} onLocaleChange={onLocaleChange} />
+      </section>
+
+      <section className="panel">
+        <h2>{t('settings.profile_picture')}</h2>
+        <div className="avatar-row">
+          <span className="avatar-preview session-avatar">
+            {user.avatarUrl ? (
+              <img className="session-avatar-img" src={user.avatarUrl} alt="" />
+            ) : (
+              <span aria-hidden="true">{user.role === 'teacher' ? '🧑‍🏫' : '🎒'}</span>
+            )}
+          </span>
+          <div className="avatar-actions">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={avatarBusy}
+              onClick={() => avatarInput.current?.click()}
+            >
+              {avatarBusy ? '…' : t('settings.change_picture')}
+            </button>
+            {user.avatarUrl && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => onAvatarChange(null)}
+              >
+                {t('settings.remove_picture')}
+              </button>
+            )}
+            <input
+              ref={avatarInput}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => void pickAvatar(e.target.files?.[0])}
+            />
+          </div>
+        </div>
+        <p className="muted">{t('settings.picture_hint')}</p>
+      </section>
+
+      <section className="panel">
+        <h2>{t('settings.font_size')}</h2>
+        <div className="fontsize-row" role="group" aria-label={t('settings.font_size')}>
+          <button
+            type="button"
+            className="btn btn-ghost fontsize-btn"
+            onClick={() => changeFontSize(-1)}
+            disabled={fontStepIndex <= 0}
+            aria-label={t('settings.text_smaller')}
+          >
+            𝐴⁻
+          </button>
+          <span className="fontsize-preview">Aa</span>
+          <button
+            type="button"
+            className="btn btn-ghost fontsize-btn"
+            onClick={() => changeFontSize(1)}
+            disabled={fontStepIndex >= FONT_STEPS.length - 1}
+            aria-label={t('settings.text_bigger')}
+          >
+            𝐴⁺
+          </button>
+        </div>
       </section>
 
       <section className="panel">

@@ -154,4 +154,17 @@ describe('profile fields', () => {
     });
     expect(noAuth.statusCode).toBe(401);
   });
+
+  it('accepts a compressed profile-picture data URL', async () => {
+    const { token } = await registerStudent();
+    const dataUrl = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA=';
+    const res = await h.app.inject({
+      method: 'PATCH',
+      url: '/api/v1/auth/profile',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { avatarUrl: dataUrl },
+    });
+    const user = JSON.parse(res.body).user as { avatarUrl: string | null };
+    expect(user.avatarUrl).toBe(dataUrl);
+  });
 });

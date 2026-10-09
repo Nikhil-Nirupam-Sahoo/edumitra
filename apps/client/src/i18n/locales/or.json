@@ -246,5 +246,13 @@
   "video.choose_board": "ବ୍ୟାଖ୍ୟାନ ଦେଖିବାକୁ ବୋର୍ଡ ବାଛ।",
   "video.subtitle_colour": "ଉପଶୀର୍ଷକ ରଙ୍ଗ",
   "video.subtitle_background": "ଉପଶୀର୍ଷକ ପୃଷ୍ଠଭୂମି",
-  "video.stream_note": "ଭିଡ଼ିଓ ଅନଲାଇନ୍ରେ ଚାଲେ। ଉପଶୀର୍ଷକ ଅଫଲାଇନ୍ ପାଇଁ ସଂରକ୍ଷଣ କରାଯାଇପାରେ।"
+  "video.stream_note": "ଭିଡ଼ିଓ ଅନଲାଇନ୍ରେ ଚାଲେ। ଉପଶୀର୍ଷକ ଅଫଲାଇନ୍ ପାଇଁ ସଂରକ୍ଷଣ କରାଯାଇପାରେ।",
+  "settings.profile": "ପ୍ରୋଫାଇଲ",
+  "settings.font_size": "ଅକ୍ଷର ଆକାର",
+  "settings.text_smaller": "ଛୋଟ ଅକ୍ଷର",
+  "settings.text_bigger": "ବଡ ଅକ୍ଷର",
+  "settings.profile_picture": "ପ୍ରୋଫାଇଲ ଚିତ୍ର",
+  "settings.change_picture": "ଚିତ୍ର ପରିବର୍ତ୍ତନ କର",
+  "settings.remove_picture": "ଚିତ୍ର ଅପସାରଣ କର",
+  "settings.picture_hint": "ଆପଣଙ୍କ ନାମ ପାଖରେ ଦେଖାଯିବା ଛୋଟ ଚିତ୍ର।"
 }

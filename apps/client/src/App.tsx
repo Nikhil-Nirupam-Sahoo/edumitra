@@ -20,6 +20,7 @@ import { SettingsPanel } from './modules/settings/SettingsPanel';
 import { VideoLecturePage } from './video/VideoLecturePage';
 import { VideoLibrary } from './video/VideoLibrary';
 import { getSyncEngine } from './sync/syncEngine';
+import { applyFontScale, loadFontScale } from './appearance';
 import { HomeScreen } from './modules/home/HomeScreen';
 import { restoreRemoteLocales } from './i18n/remote';
 import { useAuth } from './auth/client';
@@ -177,6 +178,52 @@ export function App() {
     }
   }, []);
 
+  // ---- Appearance: text size ------------------------------------------
+  // Applied to the device immediately (works offline) and mirrored to the
+  // profile when a session exists, so the setting follows the student to
+  // every device they sign in on.
+  const [fontScale, setFontScale] = useState<number>(() => loadFontScale());
+
+  useEffect(() => {
+    applyFontScale(fontScale);
+  }, [fontScale]);
+
+  // When a session is confirmed, the server's saved size wins.
+  useEffect(() => {
+    if (auth.state.status === 'signed-in' && typeof auth.state.user.fontSize === 'number') {
+      setFontScale(auth.state.user.fontSize);
+    }
+  }, [auth.state]);
+
+  const handleFontSizeChange = useCallback(
+    (scale: number) => {
+      setFontScale(scale);
+      if (auth.state.status === 'signed-in') {
+        void auth.updateProfile({ fontSize: scale }).catch(() => {
+          /* offline — the on-device value above already applies */
+        });
+      }
+    },
+    [auth],
+  );
+
+  const handleAvatarChange = useCallback(
+    (dataUrl: string | null) => {
+      if (auth.state.status === 'signed-in') {
+        void auth.updateProfile({ avatarUrl: dataUrl }).catch(() => {
+          /* offline — try again next session */
+        });
+      }
+    },
+    [auth],
+  );
+
+  const currentFontScale = useMemo(() => {
+    if (auth.state.status !== 'signed-in') return fontScale;
+    const saved = auth.state.user.fontSize;
+    return typeof saved === 'number' ? saved : fontScale;
+  }, [auth.state, fontScale]);
+
   // Load students for RewardsPanel leaderboard class filtering
   const [students, setStudents] = useState<StudentRecord[]>([]);
   useEffect(() => {
@@ -229,6 +276,8 @@ export function App() {
         user={auth.state.user}
         onSignOut={auth.signOut}
         locale={locale}
+        fontSize={currentFontScale}
+        onFontSizeChange={handleFontSizeChange}
       />
 
       {!ready ? (
@@ -267,6 +316,10 @@ export function App() {
             resetGamificationStore();
             navigate({ name: 'home' });
           }}
+          user={auth.state.user}
+          fontSize={currentFontScale}
+          onFontSizeChange={handleFontSizeChange}
+          onAvatarChange={handleAvatarChange}
         />
       ) : route.name === 'games' ? (
         <QuizArena

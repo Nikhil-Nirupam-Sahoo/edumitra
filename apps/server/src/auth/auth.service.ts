@@ -31,7 +31,7 @@ export const userSchema = z.object({
   class_id: z.string().max(40).nullable(),
   board_id: z.string().max(40).nullable(),
   school_id: z.string().max(120).nullable(),
-  avatar_url: z.string().url().nullable(),
+  avatar_url: z.string().max(60_000).nullable(),
   font_size: z.number().min(0.8).max(1.4).nullable(),
   password_hash: z.string().min(20),
 });
@@ -95,7 +95,10 @@ export const profileSchema = z
     classId: z.string().max(40).nullable().optional(),
     boardId: z.string().max(40).nullable().optional(),
     schoolId: z.string().max(120).nullable().optional(),
-    avatarUrl: z.string().url().nullable().optional(),
+    // A profile picture is stored as a small, compressed data URL the
+    // client produces with a canvas (no file server or bucket needed for
+    // an offline-first app). Sized generously to fit a 200px JPEG.
+    avatarUrl: z.string().max(60_000).nullable().optional(),
     fontSize: z.number().min(0.8).max(1.4).nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
@@ -359,7 +362,7 @@ export class AuthService {
     const schoolId =
       input.schoolId !== undefined ? clampOrNull(input.schoolId, 120) : user.school_id;
     const avatarUrl =
-      input.avatarUrl !== undefined ? clampOrNull(input.avatarUrl, 500) : user.avatar_url;
+      input.avatarUrl !== undefined ? clampOrNull(input.avatarUrl, 60_000) : user.avatar_url;
     const fontSize =
       input.fontSize !== undefined
         ? input.fontSize === null
