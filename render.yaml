@@ -47,12 +47,19 @@ services:
       # Unset, read-aloud falls back to the device's own speech voices.
       - key: BHASHINI_API_KEY
         sync: false
-      # Sign in with Google. A client ID, not a secret — public by design, and
-      # verified server-side on every sign-in. Free, no billing. Unset hides the
-      # Google button. Create it as an OAuth client ID of type "Web application"
-      # with this service URL as an authorised JavaScript origin.
+      # Sign in with Google.
+      #
+      # A client ID, NOT a secret — the ID-token flow needs no client secret and
+      # the browser must know this value to launch the button. What keeps it safe
+      # is that the server verifies every token and checks its `aud` against this
+      # ID; without that check any Google token would be accepted.
+      #
+      # Create it in Google Cloud as an OAuth client ID of type "Web
+      # application" (free, no billing), and add this service's URL —
+      # https://edumitra-1lot.onrender.com — as an Authorised JavaScript origin.
+      # If that origin is missing, Google refuses to initialise the button.
       - key: GOOGLE_CLIENT_ID
-        sync: false
+        value: 521763620102-je2gqs73vj0p8utq3ili97v01u4fu708.apps.googleusercontent.com
       # Self-registration is open by default; teacher accounts need this set to
       # "true" because a teacher decides what a class can see.
       - key: ALLOW_TEACHER_SIGNUP
