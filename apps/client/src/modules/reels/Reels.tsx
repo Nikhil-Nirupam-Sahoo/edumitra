@@ -12,6 +12,7 @@ import { getLessons } from '../../db/client';
 import type { LessonCard, QuizCard, TextCard } from '../../modules/lesson/lessonModel';
 import type { SyllabusSubjectId } from '../../db/schema';
 import { LessonArt } from '../../art/LessonArt';
+import { LessonPhoto } from '../../art/LessonPhoto';
 import { playCorrect, playWrong } from '../../gamification/sfx';
 import { createTranslator, type LocaleCode } from '../../i18n';
 
@@ -127,6 +128,13 @@ export function Reels({ locale, onClose }: { locale: LocaleCode; onClose: () => 
               subject={reel.subject as SyllabusSubjectId}
               lessonId={reel.lessonId}
               variant={index}
+            />
+            <LessonPhoto
+              className="reel-photo"
+              lessonId={reel.lessonId}
+              locale={locale}
+              size="hero"
+              alt={reel.lessonTitle}
             />
             <p className="reel-kicker">{reel.kicker}</p>
             <h2 className="reel-title">{reel.title}</h2>

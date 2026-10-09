@@ -20,6 +20,7 @@ import { registerSyncRoutes } from './sync/sync.controller.js';
 import { registerTranslateRoutes } from './translate/translate.controller.js';
 import { registerContentRoutes } from './content/content.controller.js';
 import { registerSupportRoutes } from './support/support.controller.js';
+import { registerImageRoutes } from './images/images.controller.js';
 import { AuthService } from './auth/auth.service.js';
 import { registerAuthHook, registerAuthRoutes } from './auth/auth.controller.js';
 import type { JobQueue, SyncJob } from './sync/queue.js';
@@ -142,6 +143,17 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (instance) => {
       await registerContentRoutes(instance, { config });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Chapter photographs. Served from our origin so the client can cache them
+  // and keep working offline, rather than hotlinking a third party.
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerImageRoutes(instance, { config });
     },
     { prefix: '/api/v1' },
   );

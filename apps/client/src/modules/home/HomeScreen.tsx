@@ -12,6 +12,7 @@ import { HeroBar } from '../rewards/HeroBar';
 import { QuestList } from '../rewards/QuestList';
 import { XpBurst } from '../rewards/XpBurst';
 import { RevealCard } from '../../anim/RevealCard';
+import { LessonPhoto } from '../../art/LessonPhoto';
 import { stagger, useInView } from '../../anim/scroll';
 
 type SubjectGroup = { subject: SyllabusSubjectId; lessons: LessonCardView[] };
@@ -232,6 +233,11 @@ export function HomeScreen({
                   className={`lesson-card ${item.status}`}
                   onClick={() => onLessonSelect(item.lesson.id)}
                 >
+                  <LessonPhoto
+                    lessonId={item.lesson.id}
+                    locale={locale}
+                    alt={item.lesson.title}
+                  />
                   <div className="lesson-card-header">
                     <span className="lesson-card-title">{item.lesson.title}</span>
                     <span className="lesson-card-stars" aria-label={`${item.stars} of 3 stars`}>

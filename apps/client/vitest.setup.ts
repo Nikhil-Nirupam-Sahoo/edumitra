@@ -117,3 +117,19 @@ if (!globalThis.crypto?.randomUUID) {
     configurable: true,
   });
 }
+
+// jsdom has no object URLs. The chapter-photo cache hands them to <img>, so
+// without this the cache path throws instead of being tested.
+if (typeof URL.createObjectURL !== 'function') {
+  let objectUrlCounter = 0;
+  Object.defineProperty(URL, 'createObjectURL', {
+    value: (blob: Blob) => `blob:edumitra-test/${blob.size}/${++objectUrlCounter}`,
+    configurable: true,
+    writable: true,
+  });
+  Object.defineProperty(URL, 'revokeObjectURL', {
+    value: () => {},
+    configurable: true,
+    writable: true,
+  });
+}

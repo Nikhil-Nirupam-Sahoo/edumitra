@@ -203,5 +203,6 @@
   "support.marking": "चिह्नित हो रहा है…",
   "support.your_teacher": "आपके शिक्षक",
   "support.teacher_count": "{count} शिक्षक उपलब्ध",
-  "support.retry": "फिर कोशिश करें"
+  "support.retry": "फिर कोशिश करें",
+  "settings.photo_unknown_credit": "फ़ोटो: स्रोत देखें"
 }

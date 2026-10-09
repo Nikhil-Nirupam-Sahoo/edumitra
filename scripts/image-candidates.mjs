@@ -12,7 +12,7 @@
  *   node scripts/image-candidates.mjs --sheet 2  # just rebuild sheet 2
  */
 
-import { mkdir, writeFile, readFile, access } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, access, readdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -75,11 +75,16 @@ let picks = {};
 if (await exists(PICKS)) picks = JSON.parse(await readFile(PICKS, 'utf8'));
 
 const pending = Object.keys(QUERIES).filter((id) => !picks[id]);
-console.log(`${Object.keys(QUERIES).length} chapters, ${pending.length} still need a pick`);
+const recheck = argv.includes('--recheck');
+const targets = recheck ? Object.keys(QUERIES) : pending;
+console.log(
+  `${Object.keys(QUERIES).length} chapters, ${targets.length} ` +
+    `${recheck ? 'being re-catalogued' : 'still need a pick'}`,
+);
 
 // Group chapters into contact sheets of 4 (2x2 candidates each).
 const groups = [];
-for (let i = 0; i < pending.length; i += 4) groups.push(pending.slice(i, i + 4));
+for (let i = 0; i < targets.length; i += 4) groups.push(targets.slice(i, i + 4));
 
 const catalogue = {};
 
@@ -93,12 +98,16 @@ for (let g = 0; g < groups.length; g++) {
     const candidates = await search(QUERIES[lessonId]);
     catalogue[g][lessonId] = { query: QUERIES[lessonId], candidates };
     const rows = [];
+    const have = new Set(await readdir(WORK));
     for (const c of candidates) {
-      const img = join(WORK, `${lessonId}-${candidates.indexOf(c)}.jpg`);
-      try {
-        const r = await fetch(c.thumb, { headers: { 'user-agent': UA } });
-        await writeFile(img, Buffer.from(await r.arrayBuffer()));
-      } catch { continue; }
+      const idx = candidates.indexOf(c);
+      const img = join(WORK, `${lessonId}-${idx}.jpg`);
+      if (!have.has(`${lessonId}-${idx}.jpg`)) {
+        try {
+          const r = await fetch(c.thumb, { headers: { 'user-agent': UA } });
+          await writeFile(img, Buffer.from(await r.arrayBuffer()));
+        } catch { continue; }
+      }
       rows.push({ img, c });
     }
     // One row per chapter: label each tile with its candidate index.

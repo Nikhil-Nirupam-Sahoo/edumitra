@@ -1171,3 +1171,68 @@
   margin: 0.15rem 0 0.5rem;
   font-size: 0.8rem;
 }
+
+/* ==========================================================================
+   CHAPTER PHOTOGRAPHS
+   ========================================================================== */
+
+.lesson-photo {
+  position: relative;
+  margin: 0 0 0.4rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: rgba(6, 2, 20, 0.6);
+  aspect-ratio: 16 / 9;
+  line-height: 0;
+}
+.lesson-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lesson-card:hover .lesson-photo img {
+  transform: scale(1.06);
+}
+/* Fade the photo into the card so text below never fights a busy image. */
+.lesson-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(6, 2, 20, 0.85), transparent 55%);
+}
+
+/* CC BY attribution: small, legible, and never in the way. */
+.lesson-photo figcaption {
+  position: absolute;
+  left: 0.3rem;
+  bottom: 0.2rem;
+  z-index: 1;
+  font-size: 0.58rem;
+  line-height: 1.2;
+  color: rgba(234, 246, 255, 0.75);
+  max-width: calc(100% - 0.6rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lesson-photo figcaption a {
+  color: inherit;
+}
+
+.reel-photo {
+  aspect-ratio: 16 / 9;
+}
+.reel-photo::after {
+  background: linear-gradient(to top, rgba(6, 2, 20, 0.92), transparent 60%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-photo img,
+  .lesson-card:hover .lesson-photo img {
+    transition: none;
+    transform: none !important;
+  }
+}

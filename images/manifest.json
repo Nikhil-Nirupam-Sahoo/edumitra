@@ -1,0 +1,317 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-09T05:47:34.522Z",
+  "images": {
+    "c8-math-mensuration": {
+      "credit": "Daniel Mayer",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Giza_Plateau_-_Great_Pyramid_-_wide_angle.JPG",
+      "commonsTitle": "File:Giza Plateau - Great Pyramid - wide angle.JPG",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-sci-microorganisms": {
+      "credit": "CDC/ Rob Weyant",
+      "license": "Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Leptospira_scanning_micrograph.jpg",
+      "commonsTitle": "File:Leptospira scanning micrograph.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-en-tenses": {
+      "credit": "HNH",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Movement_of_a_grandfather_clock.jpg",
+      "commonsTitle": "File:Movement of a grandfather clock.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-en-comprehension": {
+      "credit": "ceridwen",
+      "license": "CC BY-SA 2.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Reading_Room_at_the_British_Museum_-_geograph.org.uk_-_433966.jpg",
+      "commonsTitle": "File:The Reading Room at the British Museum - geograph.org.uk - 433966.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-math-lines-angles": {
+      "credit": "No machine-readable author provided. PhY assumed (based on copyright claims).",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:DTM-A20LG-01.jpg",
+      "commonsTitle": "File:DTM-A20LG-01.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-sci-matter-surroundings": {
+      "credit": "J.F. Gairns (d. 1930)",
+      "license": "Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Locomotive_boiler_sectioned.jpg",
+      "commonsTitle": "File:Locomotive boiler sectioned.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-sci-motion": {
+      "credit": "Rsa",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:JR_East_Shinkansen_lineup_at_Niigata_Depot_201210.jpg",
+      "commonsTitle": "File:JR East Shinkansen lineup at Niigata Depot 201210.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-sci-atoms-molecules": {
+      "credit": "Prateek Karandikar",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rotating_raytraced_ball_and_stick_model_of_an_icosahedron.ogv",
+      "commonsTitle": "File:Rotating raytraced ball and stick model of an icosahedron.ogv",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-en-passive-voice": {
+      "credit": "Staxringold",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chess_board_opening_staunton.jpg",
+      "commonsTitle": "File:Chess board opening staunton.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-math-real-numbers": {
+      "credit": "David Gerstein",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:David_Gerstein_-_Infinity_Rally.jpg",
+      "commonsTitle": "File:David Gerstein - Infinity Rally.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-sci-light": {
+      "credit": "Peo",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Prisms_with_high_and_low_dispersion.png",
+      "commonsTitle": "File:Prisms with high and low dispersion.png",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-sst-sectors-economy": {
+      "credit": "Roger Rössing / Renate Rössing",
+      "license": "CC BY-SA 3.0 de",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fotothek_df_roe-neg_0006548_011_Industrien%C3%A4herinnen_an_Naumann-N%C3%A4hmaschinen_in_d.jpg",
+      "commonsTitle": "File:Fotothek df roe-neg 0006548 011 Industrienäherinnen an Naumann-Nähmaschinen in d.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-en-tenses": {
+      "credit": "User:S Sepp",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wooden_hourglass_3.jpg",
+      "commonsTitle": "File:Wooden hourglass 3.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-math-linear-equations": {
+      "credit": "Puranastudy",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%E0%A4%A4%E0%A5%81%E0%A4%B2%E0%A4%BE_Balance.jpg",
+      "commonsTitle": "File:तुला Balance.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-sci-force-pressure": {
+      "credit": "Unknown",
+      "license": "Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Modern_Aneroid_Barometer.jpg",
+      "commonsTitle": "File:Modern Aneroid Barometer.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-sci-combustion-flame": {
+      "credit": "MarcusObal",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:FIRE_01.JPG",
+      "commonsTitle": "File:FIRE 01.JPG",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-sst-resources": {
+      "credit": "Martin Tuchscherer",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Open_Pit_-_panoramio.jpg",
+      "commonsTitle": "File:Open Pit - panoramio.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-sst-agriculture": {
+      "credit": "McKay Savage",
+      "license": "CC BY 2.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Women_Harvesting_Rice_Paddy.jpg",
+      "commonsTitle": "File:Women Harvesting Rice Paddy.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-sst-constitution": {
+      "credit": "A.Savin",
+      "license": "FAL",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:New_Delhi_government_block_03-2016_img3.jpg",
+      "commonsTitle": "File:New Delhi government block 03-2016 img3.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c8-en-active-passive": {
+      "credit": "MiltonPoint",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Comedy_and_tragedy_masks_from_the_Princess_Theatre,_Decatur,_AL_image_by_Marjorie_Kaufman.jpg",
+      "commonsTitle": "File:Comedy and tragedy masks from the Princess Theatre, Decatur, AL image by Marjorie Kaufman.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-math-polynomials": {
+      "credit": "The original uploader was Jmb at English Wikipedia .",
+      "license": "CC BY 2.5",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bungee_Cord_PICT6882a.jpg",
+      "commonsTitle": "File:Bungee Cord PICT6882a.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-sst-democracy": {
+      "credit": "SimonLyall",
+      "license": "Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Polling3_NZ_2008.jpg",
+      "commonsTitle": "File:Polling3 NZ 2008.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-sst-climate": {
+      "credit": "Rajarshi MITRA from Mumbai, India",
+      "license": "CC BY 2.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Monsoon_clouds_in_Bengal_India.jpg",
+      "commonsTitle": "File:Monsoon clouds in Bengal India.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-sst-food-security": {
+      "credit": "Unknown artist Unknown artist",
+      "license": "Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Evolution_of_sickle_and_flail,_33_horse_team_harvester,_cutting,_threshing_and_sacking_wheat,_Walla_Walla,_Washington,_from_Robert_N._Dennis_collection_of_stereoscopic_views.jpg",
+      "commonsTitle": "File:Evolution of sickle and flail, 33 horse team harvester, cutting, threshing and sacking wheat, Walla Walla, Washington, from Robert N. Dennis collection of stereoscopic views.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c9-en-reported-speech": {
+      "credit": "Kbrose",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Western_Electric_B1_telephone_with_E1_handset.jpg",
+      "commonsTitle": "File:Western Electric B1 telephone with E1 handset.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-math-quadratic-equations": {
+      "credit": "Adamantios",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Parabolic-antenna-LEO.jpg",
+      "commonsTitle": "File:Parabolic-antenna-LEO.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-sci-chemical-reactions": {
+      "credit": "Shaza reyad",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chemical_experiments.jpg",
+      "commonsTitle": "File:Chemical experiments.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-sci-life-processes": {
+      "credit": "Kelvinsong",
+      "license": "CC BY 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Moss_chloroplasts_100%C3%97_objective.jpg",
+      "commonsTitle": "File:Moss chloroplasts 100× objective.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-sst-development": {
+      "credit": "Yann",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:India_Gate,_New_Delhi.jpg",
+      "commonsTitle": "File:India Gate, New Delhi.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-sst-federalism": {
+      "credit": "Filpro",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:India_CM_Political_Map.png",
+      "commonsTitle": "File:India CM Political Map.png",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    },
+    "c10-en-determiners": {
+      "credit": "Roger Kidd",
+      "license": "CC BY-SA 2.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lewis%27s_vegetables_in_Wolverhampton_Market_-_geograph.org.uk_-_1522285.jpg",
+      "commonsTitle": "File:Lewis's vegetables in Wolverhampton Market - geograph.org.uk - 1522285.jpg",
+      "sizes": {
+        "card": 640,
+        "hero": 1280
+      }
+    }
+  },
+  "count": 31
+}

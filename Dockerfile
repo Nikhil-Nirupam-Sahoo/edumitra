@@ -53,6 +53,9 @@ COPY --from=client-build /repo/apps/client/dist ./apps/client/dist
 # /api/v1/content/* — the client downloads it on first run and caches it, so it
 # is NOT bundled into the PWA.
 COPY content ./content
+# Chapter photographs, served from /api/v1/images/* so the client can cache
+# them and stay offline. Deliberately NOT part of the client bundle.
+COPY images ./images
 
 WORKDIR /repo/apps/server
 # Runs as the unprivileged `node` user shipped with the image.

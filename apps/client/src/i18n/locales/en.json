@@ -203,5 +203,6 @@
   "support.marking": "Marking…",
   "support.your_teacher": "Your teacher",
   "support.teacher_count": "{count} teachers available",
-  "support.retry": "Retry"
+  "support.retry": "Retry",
+  "settings.photo_unknown_credit": "Photo: see source"
 }
