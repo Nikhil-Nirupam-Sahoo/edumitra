@@ -117,6 +117,16 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
   const card: LessonCard | undefined = cards[cardIndex];
   const quizCards = useMemo(() => cards.filter((c): c is QuizCard => c.type === 'quiz'), [cards]);
 
+  // Stable per-lesson seed for the decorative scene art. Declared with the
+  // other hooks — a hook below the early returns below would be skipped on
+  // the first render and called later, which React rejects.
+  const artVariant = useMemo(() => {
+    const id = load.lesson?.id ?? '';
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) % 997;
+    return hash;
+  }, [load.lesson?.id]);
+
   const finalScore = useMemo(() => {
     if (quizCards.length === 0) return 1;
     const correct = quizCards.filter((q) => attempts[q.questionId]?.isCorrect).length;
@@ -257,13 +267,6 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
 
   const isLastCard = cardIndex >= cards.length - 1;
   const progressPercent = formatPercent((cardIndex + 1) / cards.length);
-  // Stable per-lesson seed so the scene art doesn't change between renders.
-  const artVariant = useMemo(() => {
-    const id = load.lesson?.id ?? '';
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) % 997;
-    return hash;
-  }, [load.lesson?.id]);
 
   return (
     <div className="lesson-viewer">
