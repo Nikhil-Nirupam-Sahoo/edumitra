@@ -12,12 +12,17 @@
 import en from './locales/en.json';
 import hi from './locales/hi.json';
 import ta from './locales/ta.json';
+import { getRemoteBundle, hasRemoteBundle } from './remote';
 
-export type LocaleCode = 'en' | 'hi' | 'ta';
+/**
+ * A UI language code. The three bundled locales are enumerated for autocompletion,
+ * but any code with a live-translated bundle (see `remote.ts`) is valid too.
+ */
+export type LocaleCode = 'en' | 'hi' | 'ta' | (string & {});
 
 export type Bundle = Record<string, string>;
 
-const BUNDLES: Record<LocaleCode, Bundle> = { en, hi, ta };
+const BUNDLES: Record<string, Bundle> = { en, hi, ta };
 
 export const SUPPORTED_LOCALES: Array<{ code: LocaleCode; label: string }> = [
   { code: 'en', label: 'English' },
@@ -38,6 +43,10 @@ export interface TranslateOptions {
 export function normalizeLocale(input: string | null | undefined): LocaleCode {
   if (!input) return 'en';
   const lower = input.toLowerCase();
+  // A live-translated locale (fetched and cached by remote.ts) is used as-is,
+  // even though it has no bundled copy — otherwise it would collapse to "en"
+  // and the translation would never be consulted.
+  if (hasRemoteBundle(lower)) return lower;
   const exact = SUPPORTED_LOCALES.find((l) => l.code === lower);
   if (exact) return exact.code;
   const subtag = lower.split(/[-_]/)[0] ?? 'en';
@@ -57,7 +66,10 @@ export function translate(
 ): string {
   const normalized = normalizeLocale(locale);
   const fallback = options.fallback ?? 'en';
-  const template = getBundle(normalized)[key] ?? getBundle(fallback)[key] ?? key;
+  // A live-translated locale (fetched via /api/v1/translate and cached on the
+  // device) wins over the bundled copy; bundled locales remain the floor.
+  const remote = getRemoteBundle(normalized)?.[key];
+  const template = remote ?? getBundle(normalized)[key] ?? getBundle(fallback)[key] ?? key;
   if (!options.values) return template;
   return template.replace(/\{(\w+)\}/g, (_match, name: string) => {
     const value = options.values?.[name];

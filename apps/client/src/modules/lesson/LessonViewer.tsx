@@ -14,7 +14,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getLesson, getProgress, type ProgressPatch } from '../../db/client';
-import type { LessonRecord } from '../../db/schema';
+import type { LessonRecord, SyllabusSubjectId } from '../../db/schema';
 import { createTranslator, formatPercent, type LocaleCode } from '../../i18n';
 import {
   logCardViewed,
@@ -28,6 +28,7 @@ import { mediaUrl, useAudioCues } from './useAudioCues';
 import { useGamification, type XpGain } from '../../gamification/store';
 import { XpBurst } from '../rewards/XpBurst';
 import { CelebrationOverlay } from '../rewards/CelebrationOverlay';
+import { LessonArt } from '../../art/LessonArt';
 import { playCorrect, playWrong } from '../../gamification/sfx';
 
 export interface LessonViewerProps {
@@ -256,6 +257,13 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
 
   const isLastCard = cardIndex >= cards.length - 1;
   const progressPercent = formatPercent((cardIndex + 1) / cards.length);
+  // Stable per-lesson seed so the scene art doesn't change between renders.
+  const artVariant = useMemo(() => {
+    const id = load.lesson?.id ?? '';
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) % 997;
+    return hash;
+  }, [load.lesson?.id]);
 
   return (
     <div className="lesson-viewer">
@@ -298,7 +306,13 @@ export function LessonViewer({ lessonId, studentId, locale, onExit }: LessonView
         />
       </div>
 
-      <main className="lesson-card" key={card?.id ?? cardIndex}>
+      {/* Animated subject scene — purely decorative, hidden from screen readers */}
+      <LessonArt
+        subject={(load.lesson?.subject ?? 'practice') as SyllabusSubjectId}
+        variant={artVariant}
+      />
+
+      <main className="lesson-card lesson-card--with-art" key={card?.id ?? cardIndex}>
         {card && <CardBody card={card} audio={audio} t={t} />}
 
         {card?.type === 'quiz' && (

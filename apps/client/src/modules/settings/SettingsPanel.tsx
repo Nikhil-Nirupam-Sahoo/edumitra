@@ -12,6 +12,7 @@ import { createTranslator, SUPPORTED_LOCALES, type LocaleCode } from '../../i18n
 import { getSyncEngine, type SyncResult } from '../../sync/syncEngine';
 import { getDeviceId } from '../../sync/deviceId';
 import { isSoundEnabled, setSoundEnabled } from '../../gamification/sfx';
+import { LanguagePicker } from './LanguagePicker';
 
 export interface SettingsPanelProps {
   locale: LocaleCode;
@@ -111,19 +112,7 @@ export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsP
 
       <section className="panel">
         <h2>{t('settings.language')}</h2>
-        <label className="field">
-          <span className="sr-only">{t('settings.language')}</span>
-          <select
-            value={locale}
-            onChange={(event) => onLocaleChange(event.target.value as LocaleCode)}
-          >
-            {SUPPORTED_LOCALES.map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <LanguagePicker locale={locale} onLocaleChange={onLocaleChange} />
       </section>
 
       <section className="panel">

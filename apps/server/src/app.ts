@@ -17,6 +17,7 @@ import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import type { LoadedConfig } from './config.js';
 import type { DbPort } from './db/index.js';
 import { registerSyncRoutes } from './sync/sync.controller.js';
+import { registerTranslateRoutes } from './translate/translate.controller.js';
 import type { JobQueue, SyncJob } from './sync/queue.js';
 import type { SyncService } from './sync/sync.service.js';
 
@@ -98,6 +99,16 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         config,
         getRawBody: (request) => request.rawBody ?? '',
       });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Live translation proxy (server-side Google key; see translate.controller)
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerTranslateRoutes(instance, { config });
     },
     { prefix: '/api/v1' },
   );

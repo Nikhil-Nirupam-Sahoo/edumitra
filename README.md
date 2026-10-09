@@ -65,3 +65,38 @@ curl http://localhost:4600/api/v1/health
 
 Migrations run automatically on boot; the `pgdata` volume is enough for
 persistence. A plain `docker build .` produces the same image Render uses.
+
+## Live translation (optional)
+
+The app ships with bundled UI translations for **English, Hindi and Tamil**.
+Those work instantly and fully offline.
+
+Any other language is translated on demand through `POST /api/v1/translate`.
+The browser never holds a Google API key — it asks our server, the server
+holds the key and proxies to Google Cloud Translation v2. Results are cached
+in memory on the server and in `localStorage` on the device, so a language is
+translated once and is instant (and offline) from then on.
+
+**To enable it:**
+
+1. Create an API key in Google Cloud with the **Cloud Translation API** enabled.
+2. **Restrict the key**: Application restrictions → restrict to your server's
+   egress IPs, and API restrictions → Cloud Translation API only. An
+   unrestricted key will be found and abused against your billing account.
+3. Set it on the service (Render dashboard → your service → Environment):
+
+   ```
+   GOOGLE_TRANSLATION_API_KEY = <your key>
+   ```
+
+4. In the app: **Settings → Translate the app into…** → pick a language.
+
+If the key is unset, `/api/v1/translate/status` returns `{"enabled": false}`
+and the picker reports that live translation is unavailable. Bundled locales
+remain fully functional — translation is an enhancement, never a dependency.
+
+```bash
+# Check whether it's on
+curl https://<your-host>/api/v1/translate/status
+# {"enabled":true}
+```

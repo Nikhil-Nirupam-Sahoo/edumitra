@@ -1,0 +1,204 @@
+/*
+ * Animated lesson art — CSS keyframes for the inline SVG scenes in
+ * `art/LessonArt.tsx`. Transform/opacity only, so these stay cheap on the
+ * low-end hardware this app targets, and every one of them is disabled under
+ * `prefers-reduced-motion`.
+ */
+
+.lesson-art {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border-radius: var(--radius) var(--radius) 0 0;
+  line-height: 0;
+  /* Sit the scene behind the card content. */
+  position: relative;
+}
+
+.lesson-art svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Stars twinkle */
+.art-stars circle {
+  animation: art-twinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes art-twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Slow rotation (electron orbits, orbit rings) */
+.art-spin-slow {
+  animation: art-spin 14s linear infinite;
+}
+
+/* Faster rotation for shape fans */
+.art-spin {
+  animation: art-spin 9s linear infinite;
+}
+
+@keyframes art-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Gentle breathing pulse */
+.art-pulse {
+  animation: art-pulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes art-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+/* Floating letters bob up and down */
+.art-bob {
+  animation: art-bob 4s ease-in-out infinite;
+}
+
+@keyframes art-bob {
+  0%,
+  100% {
+    transform: translateY(4px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Small letters drift sideways */
+.art-drift {
+  animation: art-drift 6s ease-in-out infinite;
+}
+
+@keyframes art-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(10px);
+    opacity: 1;
+  }
+}
+
+/* Skylines twinkle their windows */
+.art-twinkle {
+  animation: art-twinkle 4.6s ease-in-out infinite;
+}
+
+/* ---- Reduced motion: freeze every scene ---- */
+@media (prefers-reduced-motion: reduce) {
+  .art-stars circle,
+  .art-spin-slow,
+  .art-spin,
+  .art-pulse,
+  .art-bob,
+  .art-drift,
+  .art-twinkle {
+    animation: none !important;
+  }
+  .art-pulse {
+    opacity: 0.9;
+  }
+}
+/* ---- Lesson art framed against the card ---- */
+.lesson-card--with-art {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 0;
+  margin-top: -2px;
+}
+
+.lesson-art {
+  box-shadow: inset 0 -1px 0 rgba(0, 229, 255, 0.25);
+}
+
+@media (max-width: 360px) {
+  .lesson-art {
+    aspect-ratio: 2.4 / 1;
+  }
+}
+
+/* ---- Language picker (live translation) ---- */
+.language-picker .language-more-label {
+  margin: 0.9rem 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--vc-neon-cyan);
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+
+.language-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.language-chip {
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.7rem;
+  min-height: 38px;
+  border-radius: 999px;
+  cursor: pointer;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: var(--color-text);
+  transition: all 0.15s ease;
+}
+.language-chip:hover:not(:disabled) {
+  background: rgba(0, 229, 255, 0.18);
+  box-shadow: var(--neon-glow-cyan);
+}
+.language-chip.active {
+  background: var(--vc-sunset);
+  border-color: transparent;
+  color: #2b0038;
+  box-shadow: var(--neon-glow-pink);
+}
+.language-chip.cached {
+  border-color: rgba(124, 240, 61, 0.6);
+  color: var(--vc-neon-lime);
+}
+.language-chip.cached.active {
+  color: #2b0038;
+}
+.language-chip:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.language-chip:focus-visible {
+  outline: 2px solid var(--vc-neon-cyan);
+  outline-offset: 2px;
+}
+
+.language-status {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+}

@@ -19,6 +19,7 @@ import { TeacherDashboard } from './modules/dashboard/TeacherDashboard';
 import { SettingsPanel } from './modules/settings/SettingsPanel';
 import { getSyncEngine } from './sync/syncEngine';
 import { HomeScreen } from './modules/home/HomeScreen';
+import { restoreRemoteLocales } from './i18n/remote';
 import { RewardsPanel } from './modules/rewards/RewardsPanel';
 import { resetGamificationStore } from './gamification/store';
 
@@ -50,7 +51,12 @@ export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseRoute(typeof location === 'undefined' ? '' : location.hash),
   );
-  const [locale, setLocale] = useState<LocaleCode>(() => detectInitialLocale());
+  const [locale, setLocale] = useState<LocaleCode>(() => {
+    // Restore cached live-translations BEFORE reading the stored locale, so a
+    // previously translated language resolves instead of falling back to "en".
+    restoreRemoteLocales();
+    return detectInitialLocale();
+  });
   const [online, setOnline] = useState<boolean>(
     typeof navigator === 'undefined' ? true : navigator.onLine,
   );

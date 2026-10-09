@@ -44,6 +44,11 @@ const envSchema = z.object({
   SYNC_MAX_BATCH: z.coerce.number().int().positive().max(5_000).default(1_000),
   /** Optional Redis connection for the sync job queue. */
   REDIS_URL: z.string().optional(),
+  /**
+   * Server-side only. Enables POST /api/v1/translate. Leaving it unset keeps
+   * the bundled locales as the only translation source (app still works).
+   */
+  GOOGLE_TRANSLATION_API_KEY: z.string().optional(),
   /** Comma-separated allowed CORS origins; "*" allows all (dev only). */
   CORS_ORIGINS: z.string().default('*'),
   LOG_LEVEL: z
@@ -81,6 +86,14 @@ export interface LoadedConfig {
   redisUrl: string | null;
   corsOrigins: string[] | '*';
   logLevel: string;
+  /**
+   * Google Cloud Translation API key — SERVER SIDE ONLY. Never ship this to
+   * the browser: a key in the client bundle is readable by every visitor and
+   * would be abused against the account's billing. The browser calls our
+   * /api/v1/translate proxy instead, and caches the result on-device.
+   * Null disables live translation (the bundled locales remain).
+   */
+  googleTranslationApiKey: string | null;
   isProduction: boolean;
   isTest: boolean;
 }
@@ -176,6 +189,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): LoadedConfig {
             .map((origin) => origin.trim())
             .filter((origin) => origin.length > 0),
     logLevel: value.LOG_LEVEL,
+    googleTranslationApiKey:
+      value.GOOGLE_TRANSLATION_API_KEY && value.GOOGLE_TRANSLATION_API_KEY.length > 0
+        ? value.GOOGLE_TRANSLATION_API_KEY
+        : null,
     isProduction,
     isTest: value.NODE_ENV === 'test',
     // Built PWA location: overridable, defaults to the repo's client build

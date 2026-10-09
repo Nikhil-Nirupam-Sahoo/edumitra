@@ -34,6 +34,16 @@ services:
       # Generated once at blueprint apply; injected at runtime AND bake-time.
       - key: SYNC_SIGNING_SECRET
         generateValue: true
+      # Live translation (Settings → "Translate the app into…").
+      #
+      # SECURITY: paste your key here, and RESTRICT it in Google Cloud to your
+      # Render service's egress IPs with only the Cloud Translation API
+      # enabled. This value is read by the server only and is never sent to the
+      # browser — the client calls /api/v1/translate and this server proxies.
+      # Leave it unset and the app keeps its bundled locales (en/hi/ta); nothing
+      # else changes.
+      - key: GOOGLE_TRANSLATION_API_KEY
+        sync: false
       - key: LOG_LEVEL
         value: info
       - key: DATABASE_URL
