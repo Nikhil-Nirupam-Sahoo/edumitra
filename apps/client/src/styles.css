@@ -2,21 +2,54 @@
  * EduMitra stylesheet — hand-written, no framework.
  * Rationale: on 2G/3G and low-end CPUs, shipping ~8 KB of CSS beats shipping
  * 300 KB of utility classes that must be parsed and applied at runtime.
+ *
+ * THEME: Vice City (1986 Miami) — neon sunset, synthwave grid, chrome type.
+ * Every colour, glow and gradient in the app comes from this token block, so
+ * the whole UI can be re-themed by changing tokens alone.
  */
 
 :root {
-  --color-bg: #f6f7fb;
-  --color-surface: #ffffff;
-  --color-text: #1b1f2a;
-  --color-muted: #5b6472;
-  --color-primary: #1d4ed8;
-  --color-primary-dark: #1e40af;
-  --color-ok: #15803d;
-  --color-warn: #b45309;
-  --color-danger: #b91c1c;
+  /* ---- Vice City sunset gradient (orange -> hot pink -> violet) ---- */
+  --vc-sun-1: #ffc371;
+  --vc-sun-2: #ff6b9d;
+  --vc-sun-3: #f5007d;
+  --vc-sun-4: #7b2ff7;
+  --vc-sunset: linear-gradient(180deg, var(--vc-sun-1) 0%, var(--vc-sun-2) 38%, var(--vc-sun-3) 68%, var(--vc-sun-4) 100%);
+
+  /* ---- Night sky ---- */
+  --vc-night-top: #08021c;
+  --vc-night-mid: #1b0b45;
+  --vc-night-low: #2d1060;
+  --vc-grid-line: rgba(0, 229, 255, 0.42);
+  --vc-star: rgba(255, 255, 255, 0.85);
+
+  /* ---- Neon ---- */
+  --vc-neon-cyan: #00e5ff;
+  --vc-neon-pink: #ff2d95;
+  --vc-neon-lime: #7cf03d;
+  --vc-neon-amber: #ffd166;
+  --neon-glow-cyan: 0 0 6px rgba(0, 229, 255, 0.85), 0 0 18px rgba(0, 229, 255, 0.45);
+  --neon-glow-pink: 0 0 6px rgba(255, 45, 149, 0.9), 0 0 20px rgba(255, 45, 149, 0.5);
+  --neon-glow-amber: 0 0 6px rgba(255, 209, 102, 0.9), 0 0 18px rgba(255, 160, 60, 0.45);
+
+  /* ---- Chrome (for headline type) ---- */
+  --vc-chrome: linear-gradient(180deg, #ffffff 0%, #cfe9ff 38%, #7fb6ff 52%, #2b6fd6 54%, #d9f0ff 70%, #6f8cff 100%);
+
+  /* ---- Surfaces & ink ---- */
+  --color-bg: var(--vc-night-top);
+  --color-surface: rgba(28, 12, 66, 0.82);
+  --color-surface-solid: #1c0c42;
+  --color-text: #f3f0ff;
+  --color-muted: #b9a9e8;
+  --color-primary: var(--vc-neon-cyan);
+  --color-primary-dark: var(--vc-neon-pink);
+  --color-ok: var(--vc-neon-lime);
+  --color-warn: var(--vc-neon-amber);
+  --color-danger: #ff4d6d;
+
   --radius: 12px;
   --radius-sm: 8px;
-  --shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+  --shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
   --font-size-base: 17px;
 }
 
@@ -31,10 +64,73 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-bg);
   color: var(--color-text);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
   line-height: 1.5;
+  background-color: var(--vc-night-top);
+  /* Night sky wash */
+  background-image:
+    radial-gradient(circle at 50% 118%, rgba(123, 47, 247, 0.55) 0%, rgba(245, 0, 125, 0.28) 26%, rgba(0, 0, 0, 0) 58%),
+    linear-gradient(180deg, var(--vc-night-top) 0%, var(--vc-night-mid) 52%, var(--vc-night-low) 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+/* ---- Synthwave scenery: starfield + sun + perspective grid ----
+   Drawn with gradients on a fixed, pointer-events-none layer so it costs
+   nothing to scroll and never intercepts taps. */
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  /* Starfield */
+  background-image:
+    radial-gradient(1.4px 1.4px at 12% 18%, var(--vc-star), transparent),
+    radial-gradient(1.2px 1.2px at 78% 12%, var(--vc-star), transparent),
+    radial-gradient(1.6px 1.6px at 32% 34%, var(--vc-star), transparent),
+    radial-gradient(1.2px 1.2px at 62% 26%, var(--vc-star), transparent),
+    radial-gradient(1.4px 1.4px at 88% 38%, var(--vc-star), transparent),
+    radial-gradient(1.2px 1.2px at 48% 8%, var(--vc-star), transparent),
+    radial-gradient(1.5px 1.5px at 8% 46%, var(--vc-star), transparent),
+    radial-gradient(1.2px 1.2px at 94% 20%, var(--vc-star), transparent);
+  background-repeat: no-repeat;
+}
+
+/* The sun: a slitted disc sitting on the horizon. */
+body::after {
+  content: '';
+  position: fixed;
+  left: 50%;
+  bottom: 6vh;
+  width: min(72vw, 460px);
+  height: min(72vw, 460px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  background: var(--vc-sunset);
+  /* Horizontal slits carved out of the lower half of the disc. */
+  -webkit-mask-image:
+    linear-gradient(180deg, #000 0%, #000 52%, transparent 52%),
+    repeating-linear-gradient(180deg, #000 0 14px, transparent 14px 22px);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(180deg, #000 0%, #000 52%, transparent 52%),
+    repeating-linear-gradient(180deg, #000 0 14px, transparent 14px 22px);
+  mask-composite: intersect;
+  opacity: 0.55;
+  filter: blur(0.4px);
+}
+
+/* Content sits above the scenery. The connectivity bar and bottom nav keep
+   their own sticky/fixed positioning and stacking (z-index 10 / 20). */
+.app {
+  position: relative;
+  z-index: 1;
 }
 
 .app {
@@ -1083,5 +1179,554 @@ h2 {
   .combo-pill {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   VICE CITY THEME LAYER
+   Neon chrome type, glowing glass panels, sunset gradients.
+   ========================================================================== */
+
+/* ---- Chrome headline type (the Vice City logo look) ---- */
+h1,
+.lesson-title,
+.celebration-title,
+.rewards-badges h3,
+.rewards-quests h3,
+.rewards-leaderboard h3,
+.subject-title,
+.home-quests h3 {
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+h1,
+.lesson-title {
+  background: var(--vc-chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 0 rgba(245, 0, 125, 0.55));
+}
+
+.rewards-badges h3,
+.rewards-quests h3,
+.rewards-leaderboard h3,
+.home-quests h3 {
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.82rem;
+}
+
+.subject-title {
+  color: var(--color-text);
+  text-shadow: 0 0 10px rgba(255, 45, 149, 0.5);
+}
+
+/* ---- Glass panels ---- */
+.panel,
+.lesson-card,
+.hero-bar,
+.kpi,
+.stat,
+.rewards-streak-cal,
+.rewards-badges,
+.rewards-quests,
+.rewards-leaderboard,
+.quest-card,
+.badge-card,
+.lesson-card,
+.home-quests,
+.leaderboard-item {
+  background: var(--color-surface);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--vc-sunset);
+  color: #24003a;
+  border: 0;
+  box-shadow: 0 4px 0 rgba(123, 47, 247, 0.55), var(--neon-glow-pink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.btn-primary:not(:disabled):active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(123, 47, 247, 0.55), var(--neon-glow-pink);
+}
+
+.btn-secondary {
+  background: rgba(0, 229, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.5);
+  color: var(--vc-neon-cyan);
+}
+.btn-secondary:not(:disabled):hover {
+  background: rgba(0, 229, 255, 0.16);
+  box-shadow: var(--neon-glow-cyan);
+}
+
+.btn-ghost {
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, #ff6b81, #d90429);
+  color: #fff;
+  box-shadow: 0 4px 0 #7a0016;
+}
+
+.btn-audio {
+  background: rgba(0, 229, 255, 0.12);
+  color: var(--vc-neon-cyan);
+  border-color: rgba(0, 229, 255, 0.45);
+  text-shadow: var(--neon-glow-cyan);
+}
+
+/* ---- Connectivity bar ---- */
+.connectivity-bar {
+  position: sticky;
+  z-index: 10;
+  background: rgba(0, 229, 255, 0.14);
+  color: var(--vc-neon-cyan);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+  font-weight: 600;
+  text-shadow: var(--neon-glow-cyan);
+}
+.connectivity-bar.offline {
+  background: rgba(255, 209, 102, 0.16);
+  color: var(--vc-neon-amber);
+  border-bottom-color: rgba(255, 209, 102, 0.4);
+  text-shadow: var(--neon-glow-amber);
+}
+
+/* ---- Hero bar: sunset card ---- */
+.hero-bar {
+  background:
+    linear-gradient(135deg, rgba(255, 45, 149, 0.28), rgba(123, 47, 247, 0.28)),
+    var(--color-surface);
+  border: 1px solid rgba(255, 45, 149, 0.4);
+  box-shadow: var(--shadow), var(--neon-glow-pink);
+}
+.hero-avatar {
+  background: var(--vc-sunset);
+  color: #2b0038;
+  box-shadow: 0 0 14px rgba(245, 0, 125, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+}
+.hero-level-badge {
+  background: rgba(0, 229, 255, 0.16);
+  color: var(--vc-neon-cyan);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  text-shadow: var(--neon-glow-cyan);
+}
+.hero-xp-bar {
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+}
+.hero-xp-fill {
+  background: var(--vc-sunset);
+  box-shadow: var(--neon-glow-pink);
+}
+.hero-xp-text {
+  color: var(--vc-neon-amber);
+  text-shadow: var(--neon-glow-amber);
+}
+.hero-streak {
+  color: var(--vc-neon-amber);
+  text-shadow: var(--neon-glow-amber);
+}
+.hero-today-xp {
+  color: var(--vc-neon-lime);
+  text-shadow: 0 0 8px rgba(124, 240, 61, 0.7);
+}
+
+/* ---- Class tabs ---- */
+.class-tab {
+  background: rgba(28, 12, 66, 0.7);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: var(--color-muted);
+  font-weight: 600;
+}
+.class-tab.active {
+  background: var(--vc-sunset);
+  border-color: transparent;
+  color: #2b0038;
+  box-shadow: var(--neon-glow-pink);
+  text-shadow: none;
+}
+
+/* ---- Lesson cards ---- */
+.lesson-card {
+  border-color: rgba(0, 229, 255, 0.22);
+}
+.lesson-card:hover {
+  border-color: rgba(0, 229, 255, 0.6);
+  box-shadow: var(--shadow), var(--neon-glow-cyan);
+}
+.lesson-card:active {
+  transform: scale(0.97);
+}
+.lesson-card.completed {
+  background:
+    linear-gradient(135deg, rgba(124, 240, 61, 0.16), rgba(0, 229, 255, 0.1)),
+    var(--color-surface);
+  border-color: rgba(124, 240, 61, 0.5);
+  box-shadow: var(--shadow), 0 0 14px rgba(124, 240, 61, 0.35);
+}
+.lesson-card-stars .star {
+  opacity: 0.22;
+  filter: grayscale(1);
+}
+.lesson-card-stars .star.filled {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.9));
+}
+.lesson-completed-badge {
+  color: var(--vc-neon-lime);
+  text-shadow: 0 0 8px rgba(124, 240, 61, 0.7);
+}
+.lesson-xp-preview {
+  color: var(--vc-neon-amber);
+  text-shadow: var(--neon-glow-amber);
+}
+.lesson-card.completed .lesson-status-dot {
+  background: var(--vc-neon-lime);
+  box-shadow: 0 0 8px rgba(124, 240, 61, 0.9);
+}
+.subject-icon {
+  filter: drop-shadow(0 0 8px rgba(255, 45, 149, 0.7));
+}
+
+/* ---- Quests ---- */
+.quest-card {
+  background: rgba(12, 4, 34, 0.6);
+  border-color: rgba(0, 229, 255, 0.24);
+}
+.quest-card.quest-done {
+  background: linear-gradient(135deg, rgba(124, 240, 61, 0.18), rgba(0, 229, 255, 0.1));
+  border-color: rgba(124, 240, 61, 0.55);
+  box-shadow: 0 0 14px rgba(124, 240, 61, 0.3);
+}
+.quest-done-badge {
+  background: var(--vc-neon-lime);
+  color: #06300a;
+  box-shadow: 0 0 10px rgba(124, 240, 61, 0.8);
+}
+.quest-progress-bar {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+}
+.quest-progress-fill {
+  background: var(--vc-sunset);
+  box-shadow: var(--neon-glow-amber);
+}
+
+/* ---- Badges: chrome medallions ---- */
+.badge-card {
+  background: rgba(12, 4, 34, 0.65);
+  border-color: rgba(255, 209, 102, 0.35);
+}
+.badge-card:not(.locked) {
+  background: linear-gradient(160deg, rgba(255, 209, 102, 0.18), rgba(245, 0, 125, 0.14));
+  border-color: rgba(255, 209, 102, 0.6);
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.28);
+}
+.badge-card.locked {
+  background: rgba(6, 2, 20, 0.6);
+  border-color: rgba(120, 100, 180, 0.28);
+}
+.badge-icon {
+  filter: drop-shadow(0 0 8px rgba(255, 209, 102, 0.6));
+}
+.badge-card.locked .badge-icon {
+  filter: grayscale(1) brightness(0.7);
+}
+
+/* ---- Streak calendar ---- */
+.streak-day {
+  background: rgba(6, 2, 20, 0.6);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+}
+.streak-day.active.today {
+  background: linear-gradient(180deg, rgba(255, 195, 113, 0.3), rgba(245, 0, 125, 0.28));
+  border-color: rgba(255, 209, 102, 0.7);
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
+}
+.streak-day.pending.today {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.5);
+}
+.streak-day-dot {
+  background: rgba(120, 100, 180, 0.45);
+}
+.streak-day-dot.filled {
+  background: var(--vc-sun-1);
+  box-shadow: 0 0 10px rgba(255, 195, 113, 0.95);
+}
+
+/* ---- Leaderboard ---- */
+.leaderboard-item.me {
+  background: linear-gradient(90deg, rgba(255, 209, 102, 0.26), rgba(245, 0, 125, 0.2));
+  border: 1px solid rgba(255, 209, 102, 0.6);
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.3);
+}
+.leaderboard-rank {
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+}
+.leaderboard-xp {
+  color: var(--vc-neon-amber);
+  text-shadow: var(--neon-glow-amber);
+}
+
+/* ---- Stats ---- */
+.stat-value {
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+}
+
+/* ---- Quiz ---- */
+.quiz-option {
+  background: rgba(12, 4, 34, 0.66);
+  border-color: rgba(0, 229, 255, 0.28);
+  color: var(--color-text);
+}
+.quiz-option input {
+  accent-color: var(--vc-neon-pink);
+}
+.quiz-option-selected {
+  border-color: var(--vc-neon-cyan);
+  background: rgba(0, 229, 255, 0.16);
+  box-shadow: var(--neon-glow-cyan);
+}
+.quiz-option-correct {
+  border-color: var(--vc-neon-lime);
+  background: rgba(124, 240, 61, 0.18);
+  box-shadow: 0 0 16px rgba(124, 240, 61, 0.45);
+}
+.quiz-option-wrong {
+  border-color: var(--color-danger);
+  background: rgba(255, 77, 109, 0.18);
+  box-shadow: 0 0 16px rgba(255, 77, 109, 0.4);
+}
+.feedback-correct {
+  color: var(--vc-neon-lime);
+  text-shadow: 0 0 10px rgba(124, 240, 61, 0.8);
+}
+.feedback-wrong {
+  color: var(--color-danger);
+  text-shadow: 0 0 10px rgba(255, 77, 109, 0.7);
+}
+.score-line,
+.session-xp-line {
+  color: var(--vc-neon-amber);
+  text-shadow: var(--neon-glow-amber);
+  font-weight: 700;
+}
+
+/* ---- Lesson progress bar ---- */
+.lesson-progressbar {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+}
+.lesson-progressbar-fill {
+  background: var(--vc-sunset);
+  box-shadow: var(--neon-glow-pink);
+}
+
+/* ---- Combo pill ---- */
+.combo-pill {
+  background: rgba(255, 45, 149, 0.22);
+  border: 1px solid var(--vc-neon-pink);
+  color: var(--vc-neon-pink);
+  text-shadow: var(--neon-glow-pink);
+  box-shadow: var(--neon-glow-pink);
+}
+
+/* ---- XP burst ---- */
+.xp-burst-value {
+  color: var(--vc-neon-amber);
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.95), 0 0 26px rgba(255, 107, 157, 0.8);
+  -webkit-text-stroke: 1px rgba(123, 47, 247, 0.55);
+}
+.xp-burst-combo {
+  color: var(--vc-neon-pink);
+  text-shadow: var(--neon-glow-pink);
+}
+
+/* ---- Celebration overlay ---- */
+.celebration-overlay {
+  background: radial-gradient(circle at 50% 40%, rgba(123, 47, 247, 0.5), rgba(8, 2, 28, 0.9) 62%);
+  backdrop-filter: blur(3px);
+}
+.celebration-content {
+  background: linear-gradient(165deg, rgba(28, 12, 66, 0.96), rgba(12, 4, 34, 0.97));
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  box-shadow: 0 0 40px rgba(245, 0, 125, 0.55), 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.celebration-title {
+  background: var(--vc-chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(245, 0, 125, 0.6));
+}
+.celebration-star {
+  filter: drop-shadow(0 0 12px rgba(255, 209, 102, 0.95));
+}
+.celebration-xp {
+  background: var(--vc-sunset);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 16px rgba(255, 45, 149, 0.8));
+}
+.celebration-levelup {
+  color: var(--vc-neon-cyan);
+  background: rgba(0, 229, 255, 0.14);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  text-shadow: var(--neon-glow-cyan);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.35);
+}
+.celebration-badge,
+.celebration-quest {
+  color: var(--color-text);
+}
+.celebration-badge-icon {
+  filter: drop-shadow(0 0 10px rgba(255, 209, 102, 0.9));
+}
+
+/* ---- Bottom nav ---- */
+.bottom-nav {
+  position: fixed;
+  z-index: 20;
+  background: rgba(10, 3, 30, 0.94);
+  border-top: 1px solid rgba(0, 229, 255, 0.3);
+  box-shadow: 0 -6px 24px rgba(245, 0, 125, 0.28);
+  backdrop-filter: blur(8px);
+}
+.bottom-nav button {
+  color: var(--color-muted);
+}
+.bottom-nav button.active {
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+  box-shadow: inset 0 3px 0 var(--vc-neon-pink);
+}
+
+/* ---- Forms ---- */
+.field select,
+.student-select,
+.class-picker select {
+  background: rgba(12, 4, 34, 0.85);
+  border-color: rgba(0, 229, 255, 0.4);
+  color: var(--color-text);
+}
+.field select:focus-visible,
+.student-select:focus-visible,
+.btn:focus-visible,
+.class-tab:focus-visible,
+.bottom-nav button:focus-visible {
+  outline: 2px solid var(--vc-neon-cyan);
+  outline-offset: 2px;
+}
+
+/* ---- Dashboard ---- */
+.kpi-value {
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+}
+.kpi-warn .kpi-value {
+  color: var(--vc-neon-amber);
+  text-shadow: var(--neon-glow-amber);
+}
+.kpi-ok .kpi-value {
+  color: var(--vc-neon-lime);
+  text-shadow: 0 0 10px rgba(124, 240, 61, 0.8);
+}
+.student-table th {
+  color: var(--vc-neon-cyan);
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+.student-table td,
+.struggling-item {
+  border-bottom-color: rgba(0, 229, 255, 0.14);
+}
+.row-warning td:first-child {
+  color: var(--vc-neon-amber);
+  text-shadow: var(--neon-glow-amber);
+}
+
+/* ---- Misc ink ---- */
+.muted {
+  color: var(--color-muted);
+}
+.error {
+  color: var(--color-danger);
+  text-shadow: 0 0 10px rgba(255, 77, 109, 0.6);
+}
+.warn {
+  color: var(--vc-neon-amber);
+}
+.mono {
+  color: var(--vc-neon-lime);
+}
+.panel.danger {
+  border-color: rgba(255, 77, 109, 0.5);
+}
+.card-figure img {
+  background: rgba(12, 4, 34, 0.7);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+}
+.transcript {
+  color: var(--color-muted);
+}
+.sr-only {
+  position: absolute;
+}
+
+/* ---- VHS scanlines (very subtle, sits above everything) ---- */
+.app::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.022) 0px,
+    rgba(255, 255, 255, 0.022) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ---- Respect reduced motion: kill every animation & glow pulse ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  body::after,
+  .app::after {
+    display: none;
   }
 }

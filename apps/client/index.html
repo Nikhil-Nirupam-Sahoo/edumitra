@@ -6,16 +6,33 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#1d4ed8" />
-    <meta name="description" content="EduMitra — offline-first learning for every classroom" />
+    <meta name="theme-color" content="#f5007d" />
+    <meta name="description" content="EduMitra — Vice City styled offline learning for every classroom" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="apple-touch-icon" href="/icons/icon.svg" />
     <title>EduMitra</title>
+    <style>
+      /* Pre-hydration paint: night sky so there is never a white flash. */
+      html, body { margin: 0; background: #08021c; color: #f3f0ff; }
+      #root { min-height: 100vh; }
+      .boot-splash {
+        min-height: 100vh; display: flex; align-items: center;
+        justify-content: center; font: 700 20px system-ui, sans-serif;
+        font-style: italic; letter-spacing: 0.06em;
+        background-image:
+          radial-gradient(circle at 50% 118%, rgba(123,47,247,0.55) 0%, rgba(245,0,125,0.28) 26%, rgba(0,0,0,0) 58%),
+          linear-gradient(180deg, #08021c 0%, #1b0b45 52%, #2d1060 100%);
+      }
+      .boot-splash span {
+        background: linear-gradient(180deg,#ffffff 0%,#cfe9ff 38%,#7fb6ff 52%,#2b6fd6 54%,#d9f0ff 70%,#6f8cff 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot-splash"><span>EduMitra</span></div></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       // Register the offline shell service worker. Failure is non-fatal:

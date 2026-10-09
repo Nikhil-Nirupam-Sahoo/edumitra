@@ -1,6 +1,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EduMitra">
-  <rect width="512" height="512" rx="96" fill="#1d4ed8"/>
-  <path d="M256 96 96 176l160 80 160-80-160-80Z" fill="#ffffff"/>
-  <path d="M160 240v72c0 48 192 48 192 0v-72l-96 48-96-48Z" fill="#facc15"/>
-  <circle cx="384" cy="320" r="28" fill="#22c55e"/>
+  <defs>
+    <!-- Vice City sunset: orange -> hot pink -> violet -->
+    <linearGradient id="sunset" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffc371"/>
+      <stop offset="38%" stop-color="#ff6b9d"/>
+      <stop offset="68%" stop-color="#f5007d"/>
+      <stop offset="100%" stop-color="#7b2ff7"/>
+    </linearGradient>
+    <!-- Slitted sun used as the backdrop disc -->
+    <mask id="sunslit">
+      <rect width="512" height="512" fill="#000"/>
+      <circle cx="256" cy="268" r="196" fill="#fff"/>
+      <g fill="#000">
+        <rect x="40" y="286" width="432" height="12"/>
+        <rect x="40" y="312" width="432" height="16"/>
+        <rect x="40" y="342" width="432" height="20"/>
+        <rect x="40" y="376" width="432" height="26"/>
+      </g>
+    </mask>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="38%" stop-color="#cfe9ff"/>
+      <stop offset="52%" stop-color="#7fb6ff"/>
+      <stop offset="54%" stop-color="#2b6fd6"/>
+      <stop offset="70%" stop-color="#d9f0ff"/>
+      <stop offset="100%" stop-color="#6f8cff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Night sky -->
+  <rect width="512" height="512" rx="96" fill="#08021c"/>
+  <rect width="512" height="512" rx="96" fill="url(#sunset)" mask="url(#sunslit)" opacity="0.9"/>
+
+  <!-- Synthwave grid horizon -->
+  <g stroke="#00e5ff" stroke-width="3" opacity="0.55" fill="none">
+    <path d="M0 432h512M0 456h512M0 482h512"/>
+    <path d="M256 432 96 512M256 432l160 80M256 432 200 512M256 432l56 80M256 432 140 512M256 432l116 80"/>
+  </g>
+
+  <!-- Chrome "E" mark -->
+  <g fill="url(#chrome)" stroke="#f5007d" stroke-width="4" stroke-linejoin="round">
+    <path d="M156 132h216v58H226v46h122v56H226v44h152v58H156z"/>
+  </g>
 </svg>
