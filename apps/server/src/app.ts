@@ -22,6 +22,7 @@ import { registerTtsRoutes } from './tts/tts.controller.js';
 import { registerContentTranslateRoutes } from './translate/content-translate.controller.js';
 import { registerContentRoutes } from './content/content.controller.js';
 import { registerSupportRoutes } from './support/support.controller.js';
+import { registerVideoRoutes } from './video/video.controller.js';
 import { registerImageRoutes } from './images/images.controller.js';
 import { AuthService } from './auth/auth.service.js';
 import { registerAuthHook, registerAuthRoutes } from './auth/auth.controller.js';
@@ -182,6 +183,16 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (instance) => {
       await registerImageRoutes(instance, { config });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Video lectures
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerVideoRoutes(instance, { config, db: options.db });
     },
     { prefix: '/api/v1' },
   );

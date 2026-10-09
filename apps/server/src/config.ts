@@ -62,6 +62,10 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   /** "true" lets self-registration create teacher accounts. Off by default. */
   ALLOW_TEACHER_SIGNUP: z.string().optional(),
+  /** YouTube Data API v3 key for fetching video metadata, thumbnails, and
+   *  subtitle tracks from educational channels (NCERT, BSE Odisha, CHSE, etc.).
+   *  Free tier: 10k units/day. Optional — falls back to oEmbed if unset. */
+  YOUTUBE_API_KEY: z.string().optional(),
   /** Comma-separated allowed CORS origins; "*" allows all (dev only). */
   CORS_ORIGINS: z.string().default('*'),
   LOG_LEVEL: z
@@ -115,6 +119,8 @@ export interface LoadedConfig {
   googleClientId: string | null;
   /** Allow a self-registration to create a teacher account. Off by default. */
   allowTeacherSignup: boolean;
+  /** YouTube Data API v3 key for educational video metadata. Optional. */
+  youtubeApiKey: string | null;
   isProduction: boolean;
   isTest: boolean;
 }
@@ -216,6 +222,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): LoadedConfig {
         : null,
     googleClientId:
       value.GOOGLE_CLIENT_ID && value.GOOGLE_CLIENT_ID.length > 0 ? value.GOOGLE_CLIENT_ID : null,
+    youtubeApiKey:
+      value.YOUTUBE_API_KEY && value.YOUTUBE_API_KEY.length > 0
+        ? value.YOUTUBE_API_KEY
+        : null,
     // Teacher accounts decide what a class can see, so they are provisioned
     // rather than self-served. A single-operator deployment can flip this on.
     allowTeacherSignup: value.ALLOW_TEACHER_SIGNUP === 'true',

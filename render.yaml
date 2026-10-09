@@ -64,6 +64,11 @@ services:
       # "true" because a teacher decides what a class can see.
       - key: ALLOW_TEACHER_SIGNUP
         value: 'false'
+      # YouTube Data API v3 key for educational video metadata, thumbnails, and
+      # subtitle tracks from channels like NCERT, BSE Odisha, CHSE, ICSE.
+      # Free tier: 10,000 units/day. Optional — falls back to oEmbed if unset.
+      - key: YOUTUBE_API_KEY
+        sync: false
       # AI tutor (Help tab). Same rule as the translation key: paste it here,
       # never into client code. The browser calls /api/v1/support/ask and this
       # server proxies to Anthropic. Unset → the Help tab says the tutor is not
