@@ -81,6 +81,11 @@ export function hasRemoteBundle(code: string): boolean {
   return bundles.has(code);
 }
 
+/** Seeds a cached bundle. Test-only: simulates a device that already synced. */
+export function putRemoteBundleForTests(code: string, bundle: Bundle): void {
+  bundles.set(code, bundle);
+}
+
 export type TranslateOutcome =
   | { status: 'ok'; count: number; cached: boolean }
   | { status: 'unavailable' }

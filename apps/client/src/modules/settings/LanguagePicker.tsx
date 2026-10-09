@@ -9,6 +9,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createTranslator, SUPPORTED_LOCALES, type LocaleCode } from '../../i18n';
+
+const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api/v1') as string;
 import {
   hasRemoteBundle,
   loadRemoteLocale,
@@ -50,10 +52,32 @@ type State =
 
 export function LanguagePicker({ locale, onLocaleChange }: LanguagePickerProps) {
   const [state, setState] = useState<State>({ kind: 'idle' });
+  /**
+   * Whether the server has a translation provider configured. Probed once so the
+   * extra languages can be shown as unavailable up front, instead of letting the
+   * student tap through seventeen chips that each end in the same error.
+   */
+  const [liveAvailable, setLiveAvailable] = useState<boolean | null>(null);
 
   // Keep the "cached" ticks in sync when a bundle is added/removed.
   const [, force] = useState(0);
   useEffect(() => subscribeRemoteLocales(() => force((n) => n + 1)), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/translate/status`, { cache: 'no-store' })
+      .then((res) => (res.ok ? (res.json() as Promise<{ enabled: boolean }>) : null))
+      .then((body) => {
+        if (!cancelled) setLiveAvailable(body?.enabled === true);
+      })
+      .catch(() => {
+        // Offline. A cached bundle may still be selectable, so stay optimistic.
+        if (!cancelled) setLiveAvailable(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const pick = useCallback(
     async (code: string) => {
@@ -83,7 +107,7 @@ export function LanguagePicker({ locale, onLocaleChange }: LanguagePickerProps) 
       : state.kind === 'done'
         ? 'Translated and saved on this device'
         : state.kind === 'unavailable'
-          ? 'Live translation is not available on this server'
+          ? 'Live translation is switched off on this server, so these extra languages need one connection to fetch. English, हिन्दी and தமிழ் above work right now, offline.'
           : state.kind === 'error'
             ? 'Translation failed — check your connection'
             : '';
@@ -117,13 +141,20 @@ export function LanguagePicker({ locale, onLocaleChange }: LanguagePickerProps) 
             }`}
             onClick={() => void pick(l.code)}
             aria-pressed={locale === l.code}
-            disabled={state.kind === 'working'}
+            // A cached bundle stays selectable even with no server configured —
+            // it lives on the device, so switching to it must keep working offline.
+            disabled={state.kind === 'working' || (liveAvailable === false && !hasRemoteBundle(l.code))}
           >
             {l.label}
             {hasRemoteBundle(l.code) ? ' ✓' : ''}
           </button>
         ))}
       </div>
+      {liveAvailable === false && (
+        <p className="language-status" role="status">
+          Live translation is switched off on this server. The languages above work now, offline.
+        </p>
+      )}
 
       {message && (
         <p className="language-status" role="status" aria-live="polite">
