@@ -27,17 +27,35 @@ export interface AuthRouteOptions {
   auth: AuthService;
 }
 
+/**
+ * Instances that already carry the authentication hook.
+ *
+ * Fastify encapsulates hooks per plugin scope: a hook added inside one
+ * `app.register()` does NOT run for sibling scopes. Since the role gate is
+ * applied by several independent route modules, the hook has to live on the
+ * root instance — otherwise those routes see no `request.auth` and reject
+ * every request as unauthenticated. Registering it twice would double the
+ * token verification work, so it is tracked here.
+ */
+const hookedInstances = new WeakSet<FastifyInstance>();
+
+/** Attaches `request.auth` for every route under `app` and its children. */
+export function registerAuthHook(app: FastifyInstance, auth: AuthService): void {
+  if (hookedInstances.has(app)) return;
+  hookedInstances.add(app);
+  app.addHook('onRequest', async (request) => {
+    const resolved = await auth.authenticate(bearer(request));
+    if (resolved) request.auth = resolved;
+  });
+}
+
 export async function registerAuthRoutes(
   app: FastifyInstance,
   options: AuthRouteOptions,
 ): Promise<void> {
   const { auth } = options;
 
-  /** Attaches `request.auth` when a valid token is present. */
-  app.addHook('onRequest', async (request) => {
-    const resolved = await auth.authenticate(bearer(request));
-    if (resolved) request.auth = resolved;
-  });
+  registerAuthHook(app, auth);
 
   app.post('/auth/login', async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);

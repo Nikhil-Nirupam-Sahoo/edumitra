@@ -24,6 +24,9 @@ import { useAuth } from './auth/client';
 import { LoginScreen } from './auth/LoginScreen';
 import { SessionBar } from './auth/SessionBar';
 import { RewardsPanel } from './modules/rewards/RewardsPanel';
+import { QuizArena } from './modules/games/QuizArena';
+import { Reels } from './modules/reels/Reels';
+import { SupportPanel } from './modules/support/SupportPanel';
 import { resetGamificationStore } from './gamification/store';
 
 type Route =
@@ -31,10 +34,16 @@ type Route =
   | { name: 'lesson'; lessonId: string }
   | { name: 'teacher' }
   | { name: 'settings' }
-  | { name: 'rewards' };
+  | { name: 'rewards' }
+  | { name: 'games' }
+  | { name: 'reels' }
+  | { name: 'support' };
 
-function parseRoute(hash: string): Route {
-  const path = hash.replace(/^#\/?/, '');
+/** Hash → route. Exported for tests; the shell is the only caller. */
+export function parseRoute(hash: string): Route {
+  // Trailing slashes are common from hand-typed URLs; without this, a lesson id
+  // would keep its slash and the lesson would not be found.
+  const path = hash.replace(/^#\/?/, '').replace(/\/+$/, '');
   if (path.startsWith('lesson/')) {
     const lessonId = decodeURIComponent(path.slice('lesson/'.length));
     return lessonId ? { name: 'lesson', lessonId } : { name: 'home' };
@@ -42,6 +51,9 @@ function parseRoute(hash: string): Route {
   if (path === 'teacher') return { name: 'teacher' };
   if (path === 'settings') return { name: 'settings' };
   if (path === 'rewards') return { name: 'rewards' };
+  if (path === 'games') return { name: 'games' };
+  if (path === 'reels') return { name: 'reels' };
+  if (path === 'support') return { name: 'support' };
   return { name: 'home' };
 }
 
@@ -169,6 +181,8 @@ export function App() {
   // Find current student's class
   const currentStudent = students.find((s) => s.id === studentId);
   const currentClassId = currentStudent?.class_id ?? 'class-8-a';
+  // Grade number for the tutor prompt ("Class 8"), null for non-standard classes.
+  const currentGrade = classIdToGrade(currentClassId);
 
   // ---- Roles -------------------------------------------------------------
   // A teacher lands on the class dashboard; a student learns. The active
@@ -177,7 +191,9 @@ export function App() {
   const signedInStudentId = auth.state.status === 'signed-in' ? auth.state.user.id : studentId;
 
   const visibleRoutes = useMemo<Route['name'][]>(() => {
-    if (!auth.isTeacher) return ['home', 'lesson', 'rewards', 'settings'];
+    if (!auth.isTeacher) {
+      return ['home', 'lesson', 'games', 'reels', 'rewards', 'support', 'settings'];
+    }
     return ['teacher', 'settings'];
   }, [auth.isTeacher]);
 
@@ -224,6 +240,21 @@ export function App() {
             navigate({ name: 'home' });
           }}
         />
+      ) : route.name === 'games' ? (
+        <QuizArena
+          studentId={signedInStudentId}
+          locale={locale}
+        />
+      ) : route.name === 'reels' ? (
+        <Reels locale={locale} onClose={() => navigate({ name: 'home' })} />
+      ) : route.name === 'support' ? (
+        <SupportPanel
+          locale={locale}
+          studentName={auth.state.status === 'signed-in' ? auth.state.user.displayName : 'Student'}
+          grade={currentGrade ?? undefined}
+          classId={currentClassId}
+          onClose={() => navigate({ name: 'home' })}
+        />
       ) : route.name === 'rewards' ? (
         <RewardsPanel
           studentId={signedInStudentId}
@@ -258,14 +289,35 @@ export function App() {
               className={route.name === 'home' || route.name === 'lesson' ? 'active' : ''}
               onClick={() => navigate({ name: 'home' })}
             >
-              📚 {t('nav.lessons')}
+              📚 <span className="nav-label">{t('nav.lessons')}</span>
+            </button>
+            <button
+              type="button"
+              className={route.name === 'games' ? 'active' : ''}
+              onClick={() => navigate({ name: 'games' })}
+            >
+              🎮 <span className="nav-label">{t('nav.games')}</span>
+            </button>
+            <button
+              type="button"
+              className={route.name === 'reels' ? 'active' : ''}
+              onClick={() => navigate({ name: 'reels' })}
+            >
+              🎬 <span className="nav-label">{t('nav.reels')}</span>
             </button>
             <button
               type="button"
               className={route.name === 'rewards' ? 'active' : ''}
               onClick={() => navigate({ name: 'rewards' })}
             >
-              🏆 {t('nav.rewards')}
+              🏆 <span className="nav-label">{t('nav.rewards')}</span>
+            </button>
+            <button
+              type="button"
+              className={route.name === 'support' ? 'active' : ''}
+              onClick={() => navigate({ name: 'support' })}
+            >
+              💬 <span className="nav-label">{t('nav.support')}</span>
             </button>
           </>
         )}

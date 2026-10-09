@@ -41,7 +41,15 @@ export function launchConfetti({
       'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2147483000;';
     document.body.appendChild(canvas);
   }
-  const ctx2d = canvas.getContext('2d');
+  // Some environments (jsdom, locked-down WebViews, privacy modes) throw from
+  // getContext rather than returning null. Confetti is decoration, so a failure
+  // here must never break the game that triggered it.
+  let ctx2d: CanvasRenderingContext2D | null = null;
+  try {
+    ctx2d = canvas.getContext('2d');
+  } catch {
+    return;
+  }
   if (!ctx2d) return;
 
   canvas.width = window.innerWidth;

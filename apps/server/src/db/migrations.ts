@@ -131,4 +131,22 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
     `,
   },
+  {
+    id: '0005_support_requests',
+    sql: `
+      -- Questions a student sends to their mentor. The id is a client-generated
+      -- UUID rather than a serial so the same DDL works on SQLite and Postgres.
+      CREATE TABLE IF NOT EXISTS support_requests (
+        id TEXT PRIMARY KEY,
+        student_id TEXT NOT NULL,
+        student_name TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        body TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at BIGINT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_support_requests_created ON support_requests (created_at);
+      CREATE INDEX IF NOT EXISTS idx_support_requests_status ON support_requests (status, created_at);
+    `,
+  },
 ];

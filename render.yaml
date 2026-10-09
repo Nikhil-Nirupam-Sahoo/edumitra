@@ -44,6 +44,14 @@ services:
       # else changes.
       - key: GOOGLE_TRANSLATION_API_KEY
         sync: false
+      # AI tutor (Help tab). Same rule as the translation key: paste it here,
+      # never into client code. The browser calls /api/v1/support/ask and this
+      # server proxies to Anthropic. Unset → the Help tab says the tutor is not
+      # switched on and points the student at a mentor instead.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-20250514
       - key: LOG_LEVEL
         value: info
       - key: DATABASE_URL

@@ -16,6 +16,7 @@ import { getAllXpEvents } from '../../db/client';
 import { deriveGamification } from '../../gamification/engine';
 import { formatDurationShort, formatPercent, createTranslator, type LocaleCode } from '../../i18n';
 import type { StudentRecord } from '../../db/schema';
+import { MentorInbox } from '../support/MentorInbox';
 
 const WINDOW_SIZE = 25;
 
@@ -261,6 +262,9 @@ export function TeacherDashboard({
           </button>
         )}
       </section>
+
+      {/* Questions students sent from the Help tab (server-stored). */}
+      <MentorInbox locale={locale} />
 
       {/* Class Champions leaderboard (weekly XP) */}
       <section className="panel" aria-label={t('dashboard.champions')}>

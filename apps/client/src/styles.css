@@ -558,6 +558,16 @@ h2 {
   min-height: 52px;
   cursor: pointer;
 }
+/* The student nav has six items; keep every label on one line rather than
+   letting them wrap on a narrow phone. */
+.bottom-nav button .nav-label {
+  display: block;
+  font-size: 0.62rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .bottom-nav button.active {
   color: var(--color-primary);
   font-weight: 700;

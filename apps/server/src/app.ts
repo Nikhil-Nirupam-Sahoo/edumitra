@@ -19,8 +19,9 @@ import type { DbPort } from './db/index.js';
 import { registerSyncRoutes } from './sync/sync.controller.js';
 import { registerTranslateRoutes } from './translate/translate.controller.js';
 import { registerContentRoutes } from './content/content.controller.js';
+import { registerSupportRoutes } from './support/support.controller.js';
 import { AuthService } from './auth/auth.service.js';
-import { registerAuthRoutes } from './auth/auth.controller.js';
+import { registerAuthHook, registerAuthRoutes } from './auth/auth.controller.js';
 import type { JobQueue, SyncJob } from './sync/queue.js';
 import type { SyncService } from './sync/sync.service.js';
 
@@ -122,9 +123,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   // ---------------------------------------------------------------------
   // Auth & roles — /auth/me and the role-gated /auth/whoami-* probes.
-  // Registered before content so the onRequest hook that populates
-  // request.auth is in place for everything after it.
+  // The hook that populates `request.auth` goes on the ROOT instance: Fastify
+  // scopes hooks per plugin, so adding it inside the auth plugin alone would
+  // leave the sibling support routes unable to see the session.
   // ---------------------------------------------------------------------
+  registerAuthHook(app, auth);
+
   await app.register(
     async (instance) => {
       await registerAuthRoutes(instance, { auth });
@@ -138,6 +142,16 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (instance) => {
       await registerContentRoutes(instance, { config });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Support: AI tutor proxy (server-side key) + mentor requests
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerSupportRoutes(instance, { config, db: options.db });
     },
     { prefix: '/api/v1' },
   );
