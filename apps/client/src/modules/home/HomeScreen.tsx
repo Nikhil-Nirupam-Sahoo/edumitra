@@ -11,6 +11,8 @@ import { useGamification } from '../../gamification/store';
 import { HeroBar } from '../rewards/HeroBar';
 import { QuestList } from '../rewards/QuestList';
 import { XpBurst } from '../rewards/XpBurst';
+import { RevealCard } from '../../anim/RevealCard';
+import { stagger, useInView } from '../../anim/scroll';
 
 type SubjectGroup = { subject: SyllabusSubjectId; lessons: LessonCardView[] };
 
@@ -141,6 +143,9 @@ export function HomeScreen({
 
   const currentStudent = students.find((s) => s.id === selectedStudentId) ?? { name: studentName, class_id: classId };
 
+  /** Sections fade their heading in; the cards inside run their own reveal. */
+  const sectionRef = useInView<HTMLElement>(0.05);
+
   return (
     <div className="home-screen">
       <header className="home-header">
@@ -207,15 +212,23 @@ export function HomeScreen({
         )}
 
         {subjectGroups.map((group) => (
-          <section key={group.subject} className="subject-section" aria-labelledby={`subject-${group.subject}`}>
+          <section
+            key={group.subject}
+            ref={sectionRef}
+            className="subject-section"
+            aria-labelledby={`subject-${group.subject}`}
+          >
             <h2 id={`subject-${group.subject}`} className="subject-title">
               <span className="subject-icon" aria-hidden="true">{SUBJECT_ICONS[group.subject]}</span>
               {t(`home.subject.${group.subject}`)}
             </h2>
             <div className="lesson-grid">
-              {group.lessons.map((item) => (
-                <article
+              {group.lessons.map((item, index) => (
+                <RevealCard
                   key={item.lesson.id}
+                  // Cascade the grid in rather than popping it as one block.
+                  delay={stagger(index, 45)}
+                  as="article"
                   className={`lesson-card ${item.status}`}
                   onClick={() => onLessonSelect(item.lesson.id)}
                 >
@@ -235,7 +248,7 @@ export function HomeScreen({
                     )}
                     <span className="lesson-status-dot" aria-hidden="true" />
                   </div>
-                </article>
+                </RevealCard>
               ))}
             </div>
           </section>

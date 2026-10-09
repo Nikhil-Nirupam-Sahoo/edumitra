@@ -17,6 +17,7 @@ import { deriveGamification } from '../../gamification/engine';
 import { formatDurationShort, formatPercent, createTranslator, type LocaleCode } from '../../i18n';
 import type { StudentRecord } from '../../db/schema';
 import { MentorInbox } from '../support/MentorInbox';
+import { ClassMasteryChart, StudentDetail } from './StudentDetail';
 
 const WINDOW_SIZE = 25;
 
@@ -57,6 +58,8 @@ export function TeacherDashboard({
   });
   const [visibleCount, setVisibleCount] = useState(WINDOW_SIZE);
   const [champions, setChampions] = useState<Array<{ id: string; name: string; weekXp: number; level: number }>>([]);
+  /** Student opened for individual analytics; null shows the class view. */
+  const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
 
   const refresh = useCallback(
     async (classId?: string | null) => {
@@ -216,7 +219,13 @@ export function TeacherDashboard({
           <ul className="struggling-list">
             {state.struggling.map((student) => (
               <li key={student.student.id} className="struggling-item">
-                <span className="student-name">{student.student.name}</span>
+                <button
+                  type="button"
+                  className="link-button student-name"
+                  onClick={() => setDetailStudentId(student.student.id)}
+                >
+                  {student.student.name}
+                </button>
                 <span className="student-stats">
                   {formatPercent(student.averageScore)} · {student.lessonsCompleted}/
                   {student.lessonsStarted}
@@ -262,6 +271,16 @@ export function TeacherDashboard({
           </button>
         )}
       </section>
+
+      {detailStudentId ? (
+        <StudentDetail
+          studentId={detailStudentId}
+          locale={locale}
+          onClose={() => setDetailStudentId(null)}
+        />
+      ) : (
+        <ClassMasteryChart classId={state.classId!} />
+      )}
 
       {/* Questions students sent from the Help tab (server-stored). */}
       <MentorInbox locale={locale} />
