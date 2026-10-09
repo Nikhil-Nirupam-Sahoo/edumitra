@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "contentVersion": 1,
-  "description": "EduMitra syllabus content manifest. Each entry is one lesson bundled with the app for offline use; bumping contentVersion makes the seed refresh existing installs.",
+  "contentVersion": 2,
+  "description": "EduMitra syllabus content. Served by the API at /api/v1/content/manifest and /api/v1/content/packs/:name. The client downloads it on first run and caches it in IndexedDB for offline use. Bump contentVersion to make installed devices refresh.",
   "files": {
-    "class8": "./data/class8.json",
-    "class9": "./data/class9.json",
-    "class10": "./data/class10.json"
+    "class8": "/api/v1/content/packs/class8",
+    "class9": "/api/v1/content/packs/class9",
+    "class10": "/api/v1/content/packs/class10"
   },
   "counts": {
     "class8": 12,

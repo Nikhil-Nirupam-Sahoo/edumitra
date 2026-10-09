@@ -7,7 +7,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { clearAllData, countPending, countSynced, estimateStorage } from '../../db/client';
+import { clearAllData, countPending, countSynced, estimateStorage, getLessons } from '../../db/client';
+import { redownloadContent } from '../../db/seed';
+import { installedContentVersion } from '../../content/client';
 import { createTranslator, SUPPORTED_LOCALES, type LocaleCode } from '../../i18n';
 import { getSyncEngine, type SyncResult } from '../../sync/syncEngine';
 import { getDeviceId } from '../../sync/deviceId';
@@ -41,6 +43,37 @@ export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsP
     typeof navigator === 'undefined' ? true : navigator.onLine,
   );
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
+  const [contentVersion, setContentVersion] = useState(0);
+  const [contentLessons, setContentLessons] = useState(0);
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [version, lessons] = await Promise.all([
+        installedContentVersion(),
+        getLessons().then((l) => l.length),
+      ]);
+      if (!cancelled) {
+        setContentVersion(version);
+        setContentLessons(lessons);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const downloadContent = useCallback(async () => {
+    setDownloading(true);
+    try {
+      const result = await redownloadContent();
+      setContentVersion(await installedContentVersion());
+      setContentLessons(result.lessons);
+    } finally {
+      setDownloading(false);
+    }
+  }, []);
 
   const toggleSound = useCallback(() => {
     const next = !soundOn;
@@ -143,6 +176,18 @@ export function SettingsPanel({ locale, onLocaleChange, onDataReset }: SettingsP
         <p className="muted">
           {counts.pending} pending · {counts.synced} synced
         </p>
+        <p className="muted">
+          Curriculum v{contentVersion}
+          {contentLessons > 0 ? ` · ${contentLessons} lessons on this device` : ' · no lessons yet'}
+        </p>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => void downloadContent()}
+          disabled={downloading}
+        >
+          {downloading ? 'Downloading…' : 'Download lessons'}
+        </button>
       </section>
 
       <section className="panel">

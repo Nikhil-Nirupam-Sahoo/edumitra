@@ -49,6 +49,10 @@ RUN mkdir -p /repo/apps/server/data && chown node:node /repo/apps/server/data
 # (apps/server/{dist,}/../../client/dist) resolves without configuration.
 COPY --from=server-build /repo/apps/server/dist ./apps/server/dist
 COPY --from=client-build /repo/apps/client/dist ./apps/client/dist
+# Downloadable syllabus content (manifest.json + packs/). Served by the API at
+# /api/v1/content/* — the client downloads it on first run and caches it, so it
+# is NOT bundled into the PWA.
+COPY content ./content
 
 WORKDIR /repo/apps/server
 # Runs as the unprivileged `node` user shipped with the image.

@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { seedIfEmpty } from './db/seed';
+import { bootstrap } from './db/seed';
 import { getAllStudents } from './db/client';
 import type { StudentRecord } from './db/schema';
 import {
@@ -94,14 +94,17 @@ export function App() {
     }
   }, []);
 
-  // ---- Boot: seed local content, start sync, wire connectivity -----------
+  // ---- Boot: fetch the curriculum, start sync, wire connectivity ----------
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     (async () => {
       try {
-        await seedIfEmpty();
+        const result = await bootstrap();
+        if (result.contentUnavailable) {
+          console.warn('[app] no lessons available yet — needs a connection once');
+        }
       } catch (error) {
-        console.error('[app] seeding failed', error);
+        console.error('[app] bootstrap failed', error);
       }
       setReady(true);
       const engine = getSyncEngine();

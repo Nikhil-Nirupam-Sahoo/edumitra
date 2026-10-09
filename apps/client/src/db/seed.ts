@@ -1,58 +1,16 @@
 /**
- * Seed content — puts the syllabus on the device without any network access.
+ * First-run bootstrap.
  *
- * The curriculum itself is DATA (`content/data/*.json`, described by its
- * manifest); this file only decides *when* to write it and with what version.
- *
- * Seeding is idempotent and incremental:
- *  - a fresh install gets every lesson;
- *  - an existing install only receives lessons that are missing, or whose
- *    bundled `contentVersion` is newer than the copy already on the device;
- *  - pre-existing (pre-syllabus) lessons are left untouched and shown under
- *    the Practice tab.
+ * Content is downloaded (see `content/client.ts`) and cached in IndexedDB;
+ * the student roster is device-local. Both steps are idempotent, so this runs
+ * on every app start and costs one cheap manifest request when up to date.
  */
 
-import { getLessons, getAllStudents, upsertLessons, upsertStudents } from '../db/client';
-import type { LessonRecord, StudentRecord } from '../db/schema';
-import {
-  CONTENT_VERSION,
-  loadSyllabusLessons,
-  validateSyllabusLesson,
-  type SeedLesson,
-} from '../content';
+import { getAllStudents, getLessons, upsertStudents } from '../db/client';
+import type { StudentRecord } from '../db/schema';
+import { syncContent, type ContentSyncStatus } from '../content/client';
 
-const SUBJECT_IDS = ['math', 'science', 'sst', 'english', 'practice'] as const;
-const GRADE_IDS = [8, 9, 10] as const;
-
-/** Convert one JSON lesson into a DB record (content serialized). */
-export function toLessonRecord(seed: SeedLesson, contentVersion: number, updatedAt: number): LessonRecord {
-  validateSyllabusLesson(seed.cards);
-  const grade = (GRADE_IDS as readonly number[]).includes(seed.grade) ? (seed.grade as 8 | 9 | 10) : undefined;
-  const subject = (SUBJECT_IDS as readonly string[]).includes(seed.subject)
-    ? (seed.subject as (typeof SUBJECT_IDS)[number])
-    : 'practice';
-  return {
-    id: seed.id,
-    title: seed.title,
-    language: 'en',
-    version: contentVersion,
-    content_json: JSON.stringify({
-      version: contentVersion,
-      language: 'en',
-      cards: seed.cards,
-    }),
-    updated_at: updatedAt,
-    grade,
-    subject,
-  };
-}
-
-/** Every bundled syllabus lesson, as DB records. */
-export function buildSeedLessons(): LessonRecord[] {
-  const now = Date.now();
-  return loadSyllabusLessons().map((seed) => toLessonRecord(seed, CONTENT_VERSION, now));
-}
-
+/** The demo roster. Real deployments replace this with the pairing flow. */
 export function buildSeedStudents(): StudentRecord[] {
   const now = Date.now();
   return [
@@ -65,27 +23,49 @@ export function buildSeedStudents(): StudentRecord[] {
   ];
 }
 
-/** Idempotent: safe to call on every app start. */
-export async function seedIfEmpty(): Promise<void> {
-  const [lessons, students] = await Promise.all([getLessons(), getAllStudents()]);
-  const writes: Promise<void>[] = [];
-
-  // Only write what this device is missing or has at an older content version.
-  const present = new Map(lessons.map((lesson) => [lesson.id, lesson.version]));
-  const now = Date.now();
-  const missing = loadSyllabusLessons()
-    .filter((seed) => {
-      const installed = present.get(seed.id);
-      return installed === undefined || installed < CONTENT_VERSION;
-    })
-    .map((seed) => toLessonRecord(seed, CONTENT_VERSION, now));
-
-  if (missing.length > 0) {
-    writes.push(upsertLessons(missing));
-  }
-
-  if (students.length === 0) {
-    writes.push(upsertStudents(buildSeedStudents()));
-  }
-  await Promise.all(writes);
+export interface BootstrapResult {
+  content: ContentSyncStatus;
+  lessons: number;
+  /** True when there is genuinely nothing to show and no way to fetch it. */
+  contentUnavailable: boolean;
 }
+
+/**
+ * Make sure the device has a roster and a curriculum.
+ * Never throws — a failure here must not blank the app.
+ */
+export async function bootstrap(options: { forceContent?: boolean } = {}): Promise<BootstrapResult> {
+  const content = await syncContent({ force: options.forceContent });
+
+  try {
+    const students = await getAllStudents();
+    if (students.length === 0) {
+      await upsertStudents(buildSeedStudents());
+    }
+  } catch (error) {
+    console.error('[seed] failed to ensure students', error);
+  }
+
+  let lessons = 0;
+  try {
+    lessons = (await getLessons()).length;
+  } catch {
+    lessons = 0;
+  }
+
+  return {
+    content: content.status,
+    lessons,
+    // Nothing cached AND we could not reach the server: the UI must say so
+    // rather than showing an empty classroom.
+    contentUnavailable: lessons === 0 && content.status !== 'updated',
+  };
+}
+
+/** Force a re-download of the curriculum (Settings → Download lessons). */
+export async function redownloadContent(): Promise<BootstrapResult> {
+  return bootstrap({ forceContent: true });
+}
+
+/** Backwards-compatible alias used by the app shell. */
+export const seedIfEmpty = bootstrap;

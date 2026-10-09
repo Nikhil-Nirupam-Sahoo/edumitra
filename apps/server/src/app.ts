@@ -18,6 +18,7 @@ import type { LoadedConfig } from './config.js';
 import type { DbPort } from './db/index.js';
 import { registerSyncRoutes } from './sync/sync.controller.js';
 import { registerTranslateRoutes } from './translate/translate.controller.js';
+import { registerContentRoutes } from './content/content.controller.js';
 import type { JobQueue, SyncJob } from './sync/queue.js';
 import type { SyncService } from './sync/sync.service.js';
 
@@ -109,6 +110,16 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (instance) => {
       await registerTranslateRoutes(instance, { config });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Downloadable syllabus content (data, not part of the client bundle)
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerContentRoutes(instance, { config });
     },
     { prefix: '/api/v1' },
   );

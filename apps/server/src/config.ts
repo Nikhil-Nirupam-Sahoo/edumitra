@@ -34,6 +34,8 @@ const envSchema = z.object({
 
   /** Directory of the built PWA (index.html) served by the API process. */
   CLIENT_DIST: z.string().optional(),
+  /** Directory holding manifest.json + packs/ for the downloadable syllabus. */
+  CONTENT_DIR: z.string().optional(),
 
   SYNC_SIGNING_SECRET: z.string().min(16).default(DEFAULT_SECRET),
   SYNC_SIGNATURE_MAX_SKEW_MS: z.coerce.number().int().positive().default(300_000),
@@ -76,6 +78,8 @@ export interface LoadedConfig {
   };
   /** Directory containing the built PWA to serve at "/". */
   clientDist: string;
+  /** Directory holding the downloadable syllabus content (manifest + packs). */
+  contentDir: string;
   sync: {
     signingSecret: string;
     maxSkewMs: number;
@@ -200,5 +204,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): LoadedConfig {
     clientDist: value.CLIENT_DIST && value.CLIENT_DIST.length > 0
       ? value.CLIENT_DIST
       : resolve(import.meta.dirname, '../../client/dist'),
+    // Downloadable syllabus content: manifest.json + packs/*.json. Resolves
+    // from the repo root in both src/ and dist/ layouts.
+    contentDir: value.CONTENT_DIR && value.CONTENT_DIR.length > 0
+      ? value.CONTENT_DIR
+      : resolve(import.meta.dirname, '../../../content'),
   };
 }
