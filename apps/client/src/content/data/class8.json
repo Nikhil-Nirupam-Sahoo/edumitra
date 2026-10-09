@@ -1,0 +1,1250 @@
+[
+  {
+    "id": "c8-math-rational-numbers",
+    "title": "Rational Numbers",
+    "grade": 8,
+    "subject": "math",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "What is a rational number?",
+        "body": "A number written as p/q, where p and q are integers and q is not 0, is a rational number. Examples: 4/5, -3/7, 0 (because 0 = 0/1). Every integer and every fraction is rational — but √2 is not, since no integer pair makes √2 = p/q."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Standard form & numbers between",
+        "body": "A rational number is in standard form when its denominator is positive and p, q share no common factor: 4/6 becomes 2/3. A beautiful fact: between any two rational numbers there are INFINITELY many rational numbers — you can always find more."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Which of these is a rational number?",
+        "options": [
+          {
+            "id": "a",
+            "text": "√2"
+          },
+          {
+            "id": "b",
+            "text": "π"
+          },
+          {
+            "id": "c",
+            "text": "3/4"
+          },
+          {
+            "id": "d",
+            "text": "None of these"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "3/4 = 0.75 can be written as the ratio of two integers. √2 and π cannot be written as p/q."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "How many rational numbers lie between 1/4 and 1/2?",
+        "options": [
+          {
+            "id": "a",
+            "text": "One"
+          },
+          {
+            "id": "b",
+            "text": "Two"
+          },
+          {
+            "id": "c",
+            "text": "Ten"
+          },
+          {
+            "id": "d",
+            "text": "Infinitely many"
+          }
+        ],
+        "correctOptionId": "d",
+        "explanation": "Between any two rational numbers there are infinitely many rational numbers, e.g. 3/8, 5/16, 9/32…"
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "What is 10/25 in standard form?",
+        "options": [
+          {
+            "id": "a",
+            "text": "10/25"
+          },
+          {
+            "id": "b",
+            "text": "2/5"
+          },
+          {
+            "id": "c",
+            "text": "5/2"
+          },
+          {
+            "id": "d",
+            "text": "0.4/1"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Divide numerator and denominator by their HCF, 5: 10÷5 = 2 and 25÷5 = 5. Standard form is 2/5."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "A rational number is p/q with q ≠ 0. Standard form divides out common factors. Between any two rationals, infinitely many more exist."
+      }
+    ]
+  },
+  {
+    "id": "c8-math-linear-equations",
+    "title": "Linear Equations in One Variable",
+    "grade": 8,
+    "subject": "math",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Balance the two sides",
+        "body": "An equation is a statement that two sides are equal, like 2x + 3 = 9. Solving means finding the value of x that keeps the balance true. Whatever you do to one side, do the SAME to the other — that's the golden rule."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Moving terms across (=)",
+        "body": "To solve 2x + 3 = 9: subtract 3 from both sides → 2x = 6, then divide both sides by 2 → x = 3. Moving a term to the other side with its sign changed (transposition) does the same job faster: +3 becomes −3."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Solve: 3x = 15",
+        "options": [
+          {
+            "id": "a",
+            "text": "x = 3"
+          },
+          {
+            "id": "b",
+            "text": "x = 5"
+          },
+          {
+            "id": "c",
+            "text": "x = 12"
+          },
+          {
+            "id": "d",
+            "text": "x = 45"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Divide both sides by 3: 3x ÷ 3 = 15 ÷ 3 = 5."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Ravi thinks of a number. When he adds 7, he gets 12. What is the number?",
+        "options": [
+          {
+            "id": "a",
+            "text": "5"
+          },
+          {
+            "id": "b",
+            "text": "7"
+          },
+          {
+            "id": "c",
+            "text": "19"
+          },
+          {
+            "id": "d",
+            "text": "84"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Let the number be x. x + 7 = 12 → x = 12 − 7 = 5."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Solve: 2(x + 3) = 10",
+        "options": [
+          {
+            "id": "a",
+            "text": "x = 1"
+          },
+          {
+            "id": "b",
+            "text": "x = 2"
+          },
+          {
+            "id": "c",
+            "text": "x = 3.5"
+          },
+          {
+            "id": "d",
+            "text": "x = 7"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Divide both sides by 2 → x + 3 = 5 → x = 2."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "An equation is a balance. Add, subtract, multiply or divide by the same number on both sides to find x."
+      }
+    ]
+  },
+  {
+    "id": "c8-math-mensuration",
+    "title": "Mensuration: Area & Volume",
+    "grade": 8,
+    "subject": "math",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Measuring around and inside",
+        "body": "Mensuration measures shapes. Perimeter is length around the edge; area is the space inside (square units); volume is the space inside a solid (cubic units). For a cuboid: volume = length × breadth × height, and surface area = 2(lb + bh + lh)."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Trapezium & rhombus",
+        "body": "A trapezium has one pair of parallel sides: area = ½ × (sum of parallel sides) × height = ½(a + b)h. A rhombus has equal sides and diagonals that cut at right angles: area = ½ × d₁ × d₂."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "A trapezium has parallel sides 6 cm and 8 cm, and height 4 cm. Its area is?",
+        "options": [
+          {
+            "id": "a",
+            "text": "28 cm²"
+          },
+          {
+            "id": "b",
+            "text": "56 cm²"
+          },
+          {
+            "id": "c",
+            "text": "14 cm²"
+          },
+          {
+            "id": "d",
+            "text": "48 cm²"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Area = ½ × (6 + 8) × 4 = ½ × 14 × 4 = 28 cm²."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "A cuboid is 2 m × 3 m × 4 m. Its volume is?",
+        "options": [
+          {
+            "id": "a",
+            "text": "9 m³"
+          },
+          {
+            "id": "b",
+            "text": "24 m³"
+          },
+          {
+            "id": "c",
+            "text": "52 m³"
+          },
+          {
+            "id": "d",
+            "text": "12 m³"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Volume of a cuboid = l × b × h = 2 × 3 × 4 = 24 m³."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "A cube has edge 5 cm. Its volume is?",
+        "options": [
+          {
+            "id": "a",
+            "text": "25 cm³"
+          },
+          {
+            "id": "b",
+            "text": "125 cm³"
+          },
+          {
+            "id": "c",
+            "text": "150 cm³"
+          },
+          {
+            "id": "d",
+            "text": "15 cm³"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Volume of a cube = side³ = 5 × 5 × 5 = 125 cm³."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Volume of cuboid = l × b × h; cube = side³. Trapezium area = ½(a + b)h; rhombus area = ½d₁d₂."
+      }
+    ]
+  },
+  {
+    "id": "c8-sci-force-pressure",
+    "title": "Force and Pressure",
+    "grade": 8,
+    "subject": "science",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Push or pull that changes things",
+        "body": "A force is a push or a pull. It can change the speed, direction or shape of an object. The SI unit of force is the newton (N). Forces may be contact (push, friction, muscular) or non-contact (gravity, magnetic, electrostatic) — no touching needed."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Pressure = force ÷ area",
+        "body": "Pressure is the force acting on a unit area: Pressure = Force ÷ Area. A smaller area gives MORE pressure — that is why a sharp knife cuts easily, and why school bags have wide straps (less pressure on shoulders). Liquids and gases press in ALL directions."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "What is the SI unit of force?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Pascal"
+          },
+          {
+            "id": "b",
+            "text": "Newton"
+          },
+          {
+            "id": "c",
+            "text": "Joule"
+          },
+          {
+            "id": "d",
+            "text": "Watt"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Force is measured in newtons (N), after Sir Isaac Newton."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Why does a sharp knife cut easily?",
+        "options": [
+          {
+            "id": "a",
+            "text": "It is made of steel"
+          },
+          {
+            "id": "b",
+            "text": "Its edge has a very small area, so pressure is high"
+          },
+          {
+            "id": "c",
+            "text": "It is heavy"
+          },
+          {
+            "id": "d",
+            "text": "It is cool"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Smaller area under the same force means greater pressure — Pressure = Force ÷ Area."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Gravitational force is a ___ force.",
+        "options": [
+          {
+            "id": "a",
+            "text": "Contact"
+          },
+          {
+            "id": "b",
+            "text": "Muscular"
+          },
+          {
+            "id": "c",
+            "text": "Non-contact"
+          },
+          {
+            "id": "d",
+            "text": "Frictional"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "Gravity pulls objects together from a distance — no contact needed."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Force = push or pull (unit: newton). Pressure = force ÷ area; smaller area → bigger pressure. Gravity is a non-contact force."
+      }
+    ]
+  },
+  {
+    "id": "c8-sci-combustion-flame",
+    "title": "Combustion and Flame",
+    "grade": 8,
+    "subject": "science",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Burning needs three things",
+        "body": "Combustion is a chemical reaction where a substance reacts with oxygen and releases heat (and often light). Three things are always needed: FUEL, OXYGEN, and the ignition temperature (the minimum temperature at which a fuel catches fire)."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Flames, fuels and calorific value",
+        "body": "Combustion can be rapid, spontaneous or an explosion. A candle flame has three zones; the outermost blue zone is the hottest and fully burns the fuel. Fuels differ in calorific value (heat per kg) — a good fuel has high calorific value, is easy to store and burns without much smoke."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "What are the three requirements of combustion?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Heat, light, sound"
+          },
+          {
+            "id": "b",
+            "text": "Fuel, oxygen, ignition temperature"
+          },
+          {
+            "id": "c",
+            "text": "Air, water, heat"
+          },
+          {
+            "id": "d",
+            "text": "Wood, coal, petrol"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "No oxygen → no burning. No fuel → nothing to burn. Below ignition temperature → no fire."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Which zone of a candle flame is the hottest?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Innermost zone"
+          },
+          {
+            "id": "b",
+            "text": "Middle luminous zone"
+          },
+          {
+            "id": "c",
+            "text": "Outermost blue zone"
+          },
+          {
+            "id": "d",
+            "text": "All are the same"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "The outermost zone has the most oxygen, so the fuel burns completely and the temperature is highest."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Which of these is a solid fuel?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Petrol"
+          },
+          {
+            "id": "b",
+            "text": "Coal"
+          },
+          {
+            "id": "c",
+            "text": "CNG"
+          },
+          {
+            "id": "d",
+            "text": "Kerosene"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Coal is a solid fossil fuel. Petrol and kerosene are liquids; CNG is a gas."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Combustion needs fuel + oxygen + ignition temperature. The outer blue zone of a flame is hottest. Good fuels burn clean and give lots of heat."
+      }
+    ]
+  },
+  {
+    "id": "c8-sci-microorganisms",
+    "title": "Microorganisms: Friends and Foes",
+    "grade": 8,
+    "subject": "science",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Tiny living things all around us",
+        "body": "Microorganisms are living organisms too small to see with the naked eye — you need a microscope. They include bacteria, fungi, protozoa and some algae; viruses are also studied here though they need a host to multiply."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Helpful AND harmful",
+        "body": "Microbes help us: Lactobacillus turns milk into curd; yeast makes bread rise and ferments idli batter; Rhizobium (in the roots of legumes) fixes nitrogen; Penicillium gave us the antibiotic penicillin. They also decompose waste. But some cause diseases and spoil food — control them by salting, sugaring, oiling or pasteurisation (heating milk to 72°C)."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Which microorganism helps milk turn into curd?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Yeast"
+          },
+          {
+            "id": "b",
+            "text": "Lactobacillus (a bacterium)"
+          },
+          {
+            "id": "c",
+            "text": "Virus"
+          },
+          {
+            "id": "d",
+            "text": "Algae"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Lactobacillus bacteria convert lactose into lactic acid, which thickens milk into curd."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Which bacterium fixes nitrogen in the roots of leguminous plants?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Rhizobium"
+          },
+          {
+            "id": "b",
+            "text": "Salmonella"
+          },
+          {
+            "id": "c",
+            "text": "Spirulina"
+          },
+          {
+            "id": "d",
+            "text": "E. coli"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Rhizobium forms nodules on roots and converts atmospheric nitrogen into a form plants can use."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "What is pasteurisation?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Freezing food permanently"
+          },
+          {
+            "id": "b",
+            "text": "Heating milk to kill microbes"
+          },
+          {
+            "id": "c",
+            "text": "Adding salt to meat"
+          },
+          {
+            "id": "d",
+            "text": "Drying food in the sun"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Pasteurisation heats milk to about 72°C (for a short time) to destroy harmful microbes."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Microbes are our friends (curd, bread, nitrogen, antibiotics) and sometimes foes. Preservation: salting, sugar, oil, pasteurisation."
+      }
+    ]
+  },
+  {
+    "id": "c8-sst-resources",
+    "title": "Resources",
+    "grade": 8,
+    "subject": "sst",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Anything that satisfies a need",
+        "body": "A resource is anything that satisfies a human need and has utility and value. Resources come from nature (air, water, soil, minerals) and from human skill. By exhaustibility they are renewable (water, solar, wind) or non-renewable (coal, petroleum, minerals)."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Ownership and conservation",
+        "body": "By ownership, resources are individual (a farmer’s field), community (a village pond), national (roads, ports) or international (ocean water beyond 200 nautical miles). Resources are not unlimited — sustainable development means using them so future generations also get their share."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Which of these is a RENEWABLE resource?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Coal"
+          },
+          {
+            "id": "b",
+            "text": "Petroleum"
+          },
+          {
+            "id": "c",
+            "text": "Solar energy"
+          },
+          {
+            "id": "d",
+            "text": "Natural gas"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "Solar, wind and water are renewed by nature. Coal, petroleum and gas formed over millions of years — once gone, gone."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Minerals are classified as ___ resources.",
+        "options": [
+          {
+            "id": "a",
+            "text": "Renewable"
+          },
+          {
+            "id": "b",
+            "text": "Non-renewable"
+          },
+          {
+            "id": "c",
+            "text": "Biotic"
+          },
+          {
+            "id": "d",
+            "text": "Artificial"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Minerals take millions of years to form, so they are non-renewable however carefully they are used."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "A village pond is an example of a ___ resource.",
+        "options": [
+          {
+            "id": "a",
+            "text": "Individual"
+          },
+          {
+            "id": "b",
+            "text": "Community"
+          },
+          {
+            "id": "c",
+            "text": "National"
+          },
+          {
+            "id": "d",
+            "text": "International"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Resources accessible to all people of a community (ponds, grazing grounds, parks) are community-owned."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Resources = need + utility + value. Renewable vs non-renewable; individual vs community vs national. Sustainable development protects the future."
+      }
+    ]
+  },
+  {
+    "id": "c8-sst-agriculture",
+    "title": "Agriculture",
+    "grade": 8,
+    "subject": "sst",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "The primary activity",
+        "body": "Agriculture is growing crops and raising livestock — the oldest primary activity. Arable land grows crops. Farming can be subsistence (for the farmer’s own family) or commercial (for the market)."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Kharif, Rabi and Zaid",
+        "body": "Crops follow the seasons. KHARIF crops are sown with the monsoon rains (June–September): rice, maize, cotton, jute. RABI crops are sown in winter (October–December): wheat, mustard, gram, peas. ZAID crops grow in the short summer between: watermelon, muskmelon, cucumber. India is among the world’s largest producers of rice, wheat and sugarcane."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Wheat and mustard are sown in which season?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Kharif (rainy)"
+          },
+          {
+            "id": "b",
+            "text": "Rabi (winter)"
+          },
+          {
+            "id": "c",
+            "text": "Zaid (summer)"
+          },
+          {
+            "id": "d",
+            "text": "Monsoon"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Wheat and mustard are rabi crops — sown after the rains, harvested in spring."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Farming where crops are grown mainly for sale in the market is called…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Subsistence farming"
+          },
+          {
+            "id": "b",
+            "text": "Commercial farming"
+          },
+          {
+            "id": "c",
+            "text": "Shifting farming"
+          },
+          {
+            "id": "d",
+            "text": "Garden farming"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Commercial farming grows crops and livestock for the market to earn money."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Which crop is grown during the kharif season?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Wheat"
+          },
+          {
+            "id": "b",
+            "text": "Rice"
+          },
+          {
+            "id": "c",
+            "text": "Mustard"
+          },
+          {
+            "id": "d",
+            "text": "Gram"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Rice is a kharif crop: it needs plenty of water from the monsoon rains."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Agriculture = crops + livestock. Kharif (rains: rice, maize, cotton); Rabi (winter: wheat, mustard); Zaid (summer: watermelon)."
+      }
+    ]
+  },
+  {
+    "id": "c8-sst-constitution",
+    "title": "The Indian Constitution",
+    "grade": 8,
+    "subject": "sst",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "The rule book of the country",
+        "body": "A constitution is a body of fundamental rules that a country agrees to follow. India’s Constitution was adopted on 26 November 1949 and came into force on 26 January 1950. It was drafted by the Constituent Assembly; Dr. B. R. Ambedkar chaired the drafting committee."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Why we need one — key features",
+        "body": "A constitution builds trust in a diverse country: majorities and minorities, rulers and ruled, all agree to its rules. Key features: federalism (two levels of government), parliamentary government, separation of powers (legislature, executive, judiciary), secularism, and Fundamental Rights — including equality, freedom, and protection against exploitation."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "The Indian Constitution came into force on…",
+        "options": [
+          {
+            "id": "a",
+            "text": "26 January 1950"
+          },
+          {
+            "id": "b",
+            "text": "15 August 1947"
+          },
+          {
+            "id": "c",
+            "text": "26 November 1949"
+          },
+          {
+            "id": "d",
+            "text": "2 October 1950"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Adopted on 26 Nov 1949, it took effect on Republic Day, 26 January 1950."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Who chaired the Drafting Committee of the Constitution?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Jawaharlal Nehru"
+          },
+          {
+            "id": "b",
+            "text": "Dr. B. R. Ambedkar"
+          },
+          {
+            "id": "c",
+            "text": "Mahatma Gandhi"
+          },
+          {
+            "id": "d",
+            "text": "Rajendra Prasad"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Dr. B. R. Ambedkar led the drafting committee and is called the father of the Indian Constitution."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Which of these is a Fundamental Right in India?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Right to Equality"
+          },
+          {
+            "id": "b",
+            "text": "Right to Board a Bus"
+          },
+          {
+            "id": "c",
+            "text": "Right to Free Lunch"
+          },
+          {
+            "id": "d",
+            "text": "Right to Watch TV"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Fundamental Rights protect every citizen: equality, freedom, protection against exploitation, freedom of religion, cultural rights and constitutional remedies."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "The Constitution (26 Jan 1950) is India’s rule book: federalism, separation of powers, secularism and Fundamental Rights."
+      }
+    ]
+  },
+  {
+    "id": "c8-en-tenses",
+    "title": "Tenses: When Things Happen",
+    "grade": 8,
+    "subject": "english",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Present · Past · Future",
+        "body": "Tenses tell us WHEN an action happens. Present (she goes), past (she went), future (she will go). Each has simple, continuous and perfect forms: I play, I am playing, I have played."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Choosing the right form",
+        "body": "Simple present = habits (She goes to school daily). Present continuous = happening now (She is going to school). Simple past = finished (She went yesterday). Present perfect = finished but connected to now (She has finished her homework). Future uses will/shall."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "She ___ to school every day.",
+        "options": [
+          {
+            "id": "a",
+            "text": "go"
+          },
+          {
+            "id": "b",
+            "text": "goes"
+          },
+          {
+            "id": "c",
+            "text": "going"
+          },
+          {
+            "id": "d",
+            "text": "gone"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Habits use the simple present: with he/she/it, add -s → goes."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "They ___ watching TV right now.",
+        "options": [
+          {
+            "id": "a",
+            "text": "is"
+          },
+          {
+            "id": "b",
+            "text": "was"
+          },
+          {
+            "id": "c",
+            "text": "are"
+          },
+          {
+            "id": "d",
+            "text": "will"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "“right now” = action in progress → present continuous: are watching."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "He ___ finished his homework (the result matters now).",
+        "options": [
+          {
+            "id": "a",
+            "text": "have"
+          },
+          {
+            "id": "b",
+            "text": "has"
+          },
+          {
+            "id": "c",
+            "text": "will"
+          },
+          {
+            "id": "d",
+            "text": "is having"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Present perfect expresses a completed action with present relevance: has + past participle."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Tenses show time: present, past, future — in simple, continuous and perfect forms (go, going, gone, has gone)."
+      }
+    ]
+  },
+  {
+    "id": "c8-en-active-passive",
+    "title": "Active and Passive Voice",
+    "grade": 8,
+    "subject": "english",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Who does it? Or who gets it?",
+        "body": "In ACTIVE voice the subject does the action: The cat drinks milk. In PASSIVE voice the subject receives the action: Milk is drunk by the cat. The passive is built with be + past participle."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Three steps to convert",
+        "body": "To change active → passive: (1) the object becomes the subject, (2) use the correct form of be in the SAME tense, (3) write the main verb as a past participle. The cat drinks milk → Milk is drunk by the cat."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Convert to passive: The chef cooks dinner.",
+        "options": [
+          {
+            "id": "a",
+            "text": "Dinner is cooked by the chef."
+          },
+          {
+            "id": "b",
+            "text": "Dinner was cooked by the chef."
+          },
+          {
+            "id": "c",
+            "text": "The chef is cooked by dinner."
+          },
+          {
+            "id": "d",
+            "text": "Dinner cooks the chef."
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Object (dinner) becomes subject; present tense be = is; cook → cooked. Dinner is cooked by the chef."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Convert to active: The ball was hit by Ravi.",
+        "options": [
+          {
+            "id": "a",
+            "text": "The ball hits Ravi."
+          },
+          {
+            "id": "b",
+            "text": "Ravi was hit by the ball."
+          },
+          {
+            "id": "c",
+            "text": "Ravi hit the ball."
+          },
+          {
+            "id": "d",
+            "text": "Ravi is hitting by the ball."
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "The doer (Ravi) becomes subject; past tense hit stays hit. Ravi hit the ball."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Convert to passive: Ronit wrote a letter.",
+        "options": [
+          {
+            "id": "a",
+            "text": "A letter writes Ronit."
+          },
+          {
+            "id": "b",
+            "text": "A letter was written by Ronit."
+          },
+          {
+            "id": "c",
+            "text": "A letter is written by Ronit."
+          },
+          {
+            "id": "d",
+            "text": "Ronit was written by a letter."
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Object (a letter) becomes subject; past tense be = was; write → written."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Active: subject acts. Passive: subject receives — be + past participle. The object of the active becomes the subject."
+      }
+    ]
+  },
+  {
+    "id": "c8-en-comprehension",
+    "title": "Reading Comprehension",
+    "grade": 8,
+    "subject": "english",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Finding the main idea",
+        "body": "Good readers ask questions while they read. The MAIN IDEA is the most important point the author makes. Topic sentences (often the first sentence of a paragraph) usually state it. Supporting details give examples, reasons or evidence."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Inferring and vocabulary from context",
+        "body": "Sometimes the text does not say something directly — you must INFER it from clues. Words you do not know can often be guessed from the surrounding words (context clues). Read a little before and after the unknown word."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "The main idea of a paragraph is usually found in…",
+        "options": [
+          {
+            "id": "a",
+            "text": "The last word"
+          },
+          {
+            "id": "b",
+            "text": "The topic sentence"
+          },
+          {
+            "id": "c",
+            "text": "The title only"
+          },
+          {
+            "id": "d",
+            "text": "A random line"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "The topic sentence (often the first) states the main point; the rest supports it."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "If you do not know a word, the BEST clue is…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Its length"
+          },
+          {
+            "id": "b",
+            "text": "The words around it"
+          },
+          {
+            "id": "c",
+            "text": "The page number"
+          },
+          {
+            "id": "d",
+            "text": "The cover"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Context clues — surrounding words — reveal meaning."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Inferring means…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Guessing randomly"
+          },
+          {
+            "id": "b",
+            "text": "Skipping the word"
+          },
+          {
+            "id": "c",
+            "text": "Using clues to reach a conclusion"
+          },
+          {
+            "id": "d",
+            "text": "Asking someone"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "To infer is to read between the lines using evidence in the text."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Main idea = topic sentence. Infer = use clues. Unknown words = check context around them."
+      }
+    ]
+  }
+]

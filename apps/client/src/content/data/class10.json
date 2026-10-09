@@ -1,0 +1,1250 @@
+[
+  {
+    "id": "c10-math-real-numbers",
+    "title": "Real Numbers",
+    "grade": 10,
+    "subject": "math",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Euclid’s division lemma",
+        "body": "For any positive integers a and b, we can write a = bq + r where 0 ≤ r < b. Repeating this — Euclid’s division algorithm — finds the HCF of two numbers. The FUNDAMENTAL THEOREM OF ARITHMETIC says every composite number factorises uniquely into primes (order aside)."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "HCF, LCM and irrationality",
+        "body": "For two numbers: HCF × LCM = a × b. A decimal expansion terminates only if the denominator has only 2s and 5s as primes — otherwise it repeats forever. And √2, √3, √5 are irrational: they cannot equal any fraction."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "What is the HCF of 24 and 36?",
+        "options": [
+          {
+            "id": "a",
+            "text": "6"
+          },
+          {
+            "id": "b",
+            "text": "12"
+          },
+          {
+            "id": "c",
+            "text": "24"
+          },
+          {
+            "id": "d",
+            "text": "72"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Prime factors: 24 = 2³·3 and 36 = 2²·3². HCF takes lowest powers: 2²·3 = 12."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "If HCF(a, b) = 5 and LCM(a, b) = 60, then a × b = …",
+        "options": [
+          {
+            "id": "a",
+            "text": "12"
+          },
+          {
+            "id": "b",
+            "text": "300"
+          },
+          {
+            "id": "c",
+            "text": "65"
+          },
+          {
+            "id": "d",
+            "text": "55"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "HCF × LCM = a × b = 5 × 60 = 300."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Which of these is irrational?",
+        "options": [
+          {
+            "id": "a",
+            "text": "√7"
+          },
+          {
+            "id": "b",
+            "text": "0.25"
+          },
+          {
+            "id": "c",
+            "text": "9/16"
+          },
+          {
+            "id": "d",
+            "text": "0.333…"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "√7 is not a perfect square and cannot be written as a fraction → irrational. The others are rational."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "a = bq + r (0 ≤ r < b). Unique prime factorisation. HCF × LCM = a × b. √2, √3, √5 are irrational."
+      }
+    ]
+  },
+  {
+    "id": "c10-math-quadratic-equations",
+    "title": "Quadratic Equations",
+    "grade": 10,
+    "subject": "math",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "ax² + bx + c = 0",
+        "body": "A quadratic equation is any equation in the form ax² + bx + c = 0 with a ≠ 0. Solve by FACTORING (split the middle term) or by the QUADRATIC FORMULA: x = [−b ± √(b² − 4ac)] / 2a."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "The discriminant decides",
+        "body": "D = b² − 4ac is the discriminant. D > 0 → two distinct real roots; D = 0 → two equal roots; D < 0 → no real roots. Word problems turn into quadratics naturally — a rectangle’s area, a projectile’s height."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "The roots of x² − 5x + 6 = 0 are…",
+        "options": [
+          {
+            "id": "a",
+            "text": "2 and 3"
+          },
+          {
+            "id": "b",
+            "text": "−2 and −3"
+          },
+          {
+            "id": "c",
+            "text": "1 and 6"
+          },
+          {
+            "id": "d",
+            "text": "0 and 5"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Factor: (x − 2)(x − 3) = 0 → x = 2 or x = 3."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "The discriminant of x² − 4x + 4 = 0 is…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Positive"
+          },
+          {
+            "id": "b",
+            "text": "Zero"
+          },
+          {
+            "id": "c",
+            "text": "Negative"
+          },
+          {
+            "id": "d",
+            "text": "6"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "D = (−4)² − 4·1·4 = 16 − 16 = 0 → two equal real roots (x = 2, twice)."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "For x² + 2x + 5 = 0, the discriminant is negative. The equation has…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Two distinct real roots"
+          },
+          {
+            "id": "b",
+            "text": "Two equal real roots"
+          },
+          {
+            "id": "c",
+            "text": "No real roots"
+          },
+          {
+            "id": "d",
+            "text": "One root"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "D = 4 − 20 = −16 < 0 → no real roots (the graph never touches the x-axis)."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "x = [−b ± √D]/2a with D = b² − 4ac. D>0: two roots; D=0: equal roots; D<0: no real roots."
+      }
+    ]
+  },
+  {
+    "id": "c10-math-trigonometry",
+    "title": "Introduction to Trigonometry",
+    "grade": 10,
+    "subject": "math",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Ratios of a right triangle",
+        "body": "For an angle A in a right triangle: sin A = opposite ÷ hypotenuse, cos A = adjacent ÷ hypotenuse, tan A = opposite ÷ adjacent. The reciprocals: cosec A = 1/sin A, sec A = 1/cos A, cot A = 1/tan A. Also tan A = sin A ÷ cos A."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Standard values & identities",
+        "body": "Memorise the key angles: sin 30° = 1/2, sin 45° = 1/√2, sin 60° = √3/2; cos 0° = 1, tan 45° = 1, tan 60° = √3. Golden identity: sin²A + cos²A = 1, so 1 − cos²A = sin²A. Trigonometry measures heights you cannot reach — using angles of elevation and depression."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "sin 30° = …",
+        "options": [
+          {
+            "id": "a",
+            "text": "1"
+          },
+          {
+            "id": "b",
+            "text": "1/2"
+          },
+          {
+            "id": "c",
+            "text": "√3/2"
+          },
+          {
+            "id": "d",
+            "text": "2"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "For a 30-60-90 triangle the side opposite 30° is half the hypotenuse, so sin 30° = 1/2."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "tan 45° = …",
+        "options": [
+          {
+            "id": "a",
+            "text": "0"
+          },
+          {
+            "id": "b",
+            "text": "1/√2"
+          },
+          {
+            "id": "c",
+            "text": "1"
+          },
+          {
+            "id": "d",
+            "text": "√3"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "In a 45-45-90 triangle opposite = adjacent, so tan 45° = 1."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Simplify: 1 − cos²A = …",
+        "options": [
+          {
+            "id": "a",
+            "text": "sin²A"
+          },
+          {
+            "id": "b",
+            "text": "cos²A"
+          },
+          {
+            "id": "c",
+            "text": "tan²A"
+          },
+          {
+            "id": "d",
+            "text": "1 + sin A"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "From sin²A + cos²A = 1 rearrange: 1 − cos²A = sin²A."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "sin = opp/hyp, cos = adj/hyp, tan = opp/adj. Standard angles 0°,30°,45°,60°,90°. sin²A + cos²A = 1."
+      }
+    ]
+  },
+  {
+    "id": "c10-sci-chemical-reactions",
+    "title": "Chemical Reactions & Equations",
+    "grade": 10,
+    "subject": "science",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "New substances appear",
+        "body": "In a chemical reaction, reactants change into new substances (products) with different properties. Signs: colour change, gas bubbles, a precipitate, or heat/light. Equations must be BALANCED — atoms are conserved, never created or destroyed."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Kinds of reactions",
+        "body": "COMBINATION: 2Mg + O₂ → 2MgO. DECOMPOSITION: CaCO₃ →(heat) CaO + CO₂. DISPLACEMENT: more reactive metal replaces another. DOUBLE DISPLACEMENT: ions swap partners, often making a precipitate. Redox reactions combine oxidation and reduction. Corrosion (rusting) and rancidity (stale oil) are slow reactions food producers fight with antioxidants and coatings."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Which is an example of a combination reaction?",
+        "options": [
+          {
+            "id": "a",
+            "text": "2Mg + O₂ → 2MgO"
+          },
+          {
+            "id": "b",
+            "text": "CaCO₃ → CaO + CO₂"
+          },
+          {
+            "id": "c",
+            "text": "H₂O → H₂ + O₂"
+          },
+          {
+            "id": "d",
+            "text": "Fe + CuSO₄ → FeSO₄ + Cu"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Two reactants (magnesium and oxygen) join to form ONE product."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "On heating, calcium carbonate decomposes to…",
+        "options": [
+          {
+            "id": "a",
+            "text": "CaO + CO₂"
+          },
+          {
+            "id": "b",
+            "text": "Ca + CO₂"
+          },
+          {
+            "id": "c",
+            "text": "CaCO₃ does not decompose"
+          },
+          {
+            "id": "d",
+            "text": "Ca(OH)₂"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "CaCO₃ →(heat) CaO (quicklime) + CO₂ (carbon dioxide)."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Oil and fat products turn rancid when they…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Get oxidised in air"
+          },
+          {
+            "id": "b",
+            "text": "Are heated briefly"
+          },
+          {
+            "id": "c",
+            "text": "Are frozen"
+          },
+          {
+            "id": "d",
+            "text": "Absorb water perfectly"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Rancidity is the oxidation of fats/oils. Antioxidants slow it down."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Balanced equations conserve atoms. Types: combination, decomposition, displacement, double displacement, redox."
+      }
+    ]
+  },
+  {
+    "id": "c10-sci-life-processes",
+    "title": "Life Processes",
+    "grade": 10,
+    "subject": "science",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Keeping life running",
+        "body": "Life processes keep organisms alive: nutrition, respiration, transportation, excretion. Plants are AUTOTROPHIC — photosynthesis makes glucose: 6CO₂ + 6H₂O →(light) C₆H₁₂O₆ + 6O₂. Animals and fungi are HETEROTROPHIC — they eat others’ food."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Respiration & transport",
+        "body": "AEROBIC respiration uses oxygen and releases more energy (about 36 ATP); ANAEROBIC respiration (in muscles during hard work, or yeast) releases less. Humans transport with blood: the heart’s double circulation pumps oxygenated and deoxygenated blood. The kidneys, full of nephrons, filter waste into urine; plants transpire through stomata."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "The food made by photosynthesis is stored by plants as…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Starch"
+          },
+          {
+            "id": "b",
+            "text": "Chlorophyll"
+          },
+          {
+            "id": "c",
+            "text": "Carbon dioxide"
+          },
+          {
+            "id": "d",
+            "text": "Oxygen"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Glucose is quickly stored as starch in leaves, roots and seeds."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Compared with anaerobic respiration, aerobic respiration releases…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Much more energy (ATP)"
+          },
+          {
+            "id": "b",
+            "text": "Less energy"
+          },
+          {
+            "id": "c",
+            "text": "No energy"
+          },
+          {
+            "id": "d",
+            "text": "Only heat, no ATP"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Aerobic respiration fully breaks down glucose → about 36 ATP; anaerobic gives just 2."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "The nephron is the working unit of the…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Lungs"
+          },
+          {
+            "id": "b",
+            "text": "Kidney"
+          },
+          {
+            "id": "c",
+            "text": "Heart"
+          },
+          {
+            "id": "d",
+            "text": "Stomach"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Each kidney holds about a million nephrons that filter the blood and form urine."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Nutrition (photosynthesis), respiration (aerobic > anaerobic), transportation (blood, nephrons, stomata), excretion."
+      }
+    ]
+  },
+  {
+    "id": "c10-sci-light",
+    "title": "Light: Reflection & Refraction",
+    "grade": 10,
+    "subject": "science",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Bouncing and bending",
+        "body": "REFLECTION: light bounces off a surface — angle of incidence ALWAYS equals angle of reflection. A plane mirror makes a virtual, same-size, laterally inverted image. Concave mirrors converge (torch reflectors), convex mirrors spread out (vehicle side mirrors). Mirror formula: 1/f = 1/v + 1/u."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Lenses and the eye",
+        "body": "REFRACTION bends light when it changes medium. Convex lenses CONVERGE (magnifying glass), concave lenses DIVERGE. Lens power P = 1/f (unit: dioptre). The human eye focuses with a lens; MYOPIA (short sight) is corrected with a concave lens, HYPERMETROPIA (long sight) with a convex lens."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "If a light ray strikes a mirror at 40° to the normal, it reflects at…",
+        "options": [
+          {
+            "id": "a",
+            "text": "40°"
+          },
+          {
+            "id": "b",
+            "text": "50°"
+          },
+          {
+            "id": "c",
+            "text": "80°"
+          },
+          {
+            "id": "d",
+            "text": "140°"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "The law of reflection: angle of incidence = angle of reflection = 40°."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "A convex lens is also called a ___ lens.",
+        "options": [
+          {
+            "id": "a",
+            "text": "Diverging"
+          },
+          {
+            "id": "b",
+            "text": "Converging"
+          },
+          {
+            "id": "c",
+            "text": "Reflecting"
+          },
+          {
+            "id": "d",
+            "text": "Flat"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Convex lenses bend light rays together (converge) — used in magnifiers and cameras."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Myopia (short-sightedness) is corrected with which lens?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Convex lens"
+          },
+          {
+            "id": "b",
+            "text": "Concave lens"
+          },
+          {
+            "id": "c",
+            "text": "Cylindrical lens"
+          },
+          {
+            "id": "d",
+            "text": "No lens is needed"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "A concave lens spreads rays slightly so the image falls on the retina, not in front of it."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "i = r. Concave converges, convex diverges (or vice-versa for mirrors!). Myopia → concave lens; hypermetropia → convex lens."
+      }
+    ]
+  },
+  {
+    "id": "c10-sst-development",
+    "title": "Development",
+    "grade": 10,
+    "subject": "sst",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "More than just income",
+        "body": "Development means progress towards a better life. Income matters, but people also value security, education, good health, respect and a clean environment. Two citizens may have different (but reasonable) ideas of development — development is judged by what people actually need."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "HDI and sustainability",
+        "body": "The Human Development Index (HDI) ranks countries on income plus life expectancy plus education. A very high-income country can still rank low if health and education lag. SUSTAINABLE development meets today’s needs without stealing from the future — protecting resources, water and climate for the children of tomorrow."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Besides income, the HDI also measures…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Only population"
+          },
+          {
+            "id": "b",
+            "text": "Health (life expectancy) and education"
+          },
+          {
+            "id": "c",
+            "text": "Only factory output"
+          },
+          {
+            "id": "d",
+            "text": "Number of roads"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "HDI = income + life expectancy + education levels."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Sustainable development means…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Using everything today"
+          },
+          {
+            "id": "b",
+            "text": "Meeting present needs without harming future generations"
+          },
+          {
+            "id": "c",
+            "text": "Stopping all development"
+          },
+          {
+            "id": "d",
+            "text": "Only building factories"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Development must balance today’s needs with tomorrow’s ability to meet theirs."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Why is development not the same for everyone?",
+        "options": [
+          {
+            "id": "a",
+            "text": "People value different goals like security and dignity"
+          },
+          {
+            "id": "b",
+            "text": "Only income can define it"
+          },
+          {
+            "id": "c",
+            "text": "It is the same for all nations"
+          },
+          {
+            "id": "d",
+            "text": "It only depends on the weather"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "Different people face different needs — income, health, safety, freedom — so development must respect diverse goals."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Development = income + health + education + dignity + sustainability. HDI ranks on income, life expectancy and education."
+      }
+    ]
+  },
+  {
+    "id": "c10-sst-sectors-economy",
+    "title": "Sectors of the Indian Economy",
+    "grade": 10,
+    "subject": "sst",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Three ways to make a living",
+        "body": "PRIMARY sector: nature-based work — farming, fishing, mining. SECONDARY sector: manufacturing and construction. TERTIARY sector: services — banking, transport, IT, teaching. Gross Domestic Product (GDP) totals the value of goods and services a country produces in a year."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Where India stands",
+        "body": "Most Indians still work in the PRIMARY sector, but it contributes only a small share of GDP — too many people on too little land. The TERTIARY sector now contributes the largest share of GDP and is growing fastest. Work is ORGANISED (regular jobs, benefits) or UNORGANISED (casual, little protection); ownership is PUBLIC (government) or PRIVATE."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Banking belongs to which sector?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Primary"
+          },
+          {
+            "id": "b",
+            "text": "Secondary"
+          },
+          {
+            "id": "c",
+            "text": "Tertiary"
+          },
+          {
+            "id": "d",
+            "text": "None"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "Services like banking, transport and teaching are tertiary-sector activities."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "Today, the LARGEST share of India’s GDP comes from…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Agriculture"
+          },
+          {
+            "id": "b",
+            "text": "Manufacturing"
+          },
+          {
+            "id": "c",
+            "text": "Services"
+          },
+          {
+            "id": "d",
+            "text": "Mining"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "The tertiary (services) sector contributes over half of India’s GDP."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "An enterprise owned by the government belongs to the…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Private sector"
+          },
+          {
+            "id": "b",
+            "text": "Public sector"
+          },
+          {
+            "id": "c",
+            "text": "Primary sector"
+          },
+          {
+            "id": "d",
+            "text": "Organised sector"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Public-sector enterprises (like Indian Railways) are owned by the government."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Primary = nature, Secondary = industry, Tertiary = services. GDP = national output. India: most workers in primary, most GDP from services."
+      }
+    ]
+  },
+  {
+    "id": "c10-sst-federalism",
+    "title": "Federalism",
+    "grade": 10,
+    "subject": "sst",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Two levels of government",
+        "body": "FEDERALISM is a system with two or more levels of government: a national (union) government and state governments, each with its own powers. India is large and diverse — federalism lets states govern themselves while the union handles national matters."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "The three lists & Panchayati Raj",
+        "body": "India’s constitution splits subjects into the UNION list (defence, foreign affairs, currency), the STATE list (police, agriculture, health) and the CONCURRENT list (education, forests — both levels act). Power also goes DOWN to villages: PANCHAYATI RAJ — gram panchayat → block samiti → zilla parishad — plus municipalities for towns."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Which subject belongs to the Union List?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Police"
+          },
+          {
+            "id": "b",
+            "text": "Defence"
+          },
+          {
+            "id": "c",
+            "text": "Agriculture"
+          },
+          {
+            "id": "d",
+            "text": "Health"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Defence, foreign affairs, currency and railways are national subjects on the Union List."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "The lowest level of the Panchayati Raj is the…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Zilla parishad"
+          },
+          {
+            "id": "b",
+            "text": "Gram panchayat"
+          },
+          {
+            "id": "c",
+            "text": "Block samiti"
+          },
+          {
+            "id": "d",
+            "text": "Municipal corporation"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Gram panchayats govern villages; block samitis and zilla parishads sit above them."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Education appears on which list?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Union List"
+          },
+          {
+            "id": "b",
+            "text": "State List only"
+          },
+          {
+            "id": "c",
+            "text": "Concurrent List"
+          },
+          {
+            "id": "d",
+            "text": "No list"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "Both centre and states make laws on Concurrent List subjects such as education and forests."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Federalism = union + states with divided powers (Union, State, Concurrent lists). Decentralisation → Panchayati Raj & municipalities."
+      }
+    ]
+  },
+  {
+    "id": "c10-en-clauses",
+    "title": "Clauses",
+    "grade": 10,
+    "subject": "english",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Building blocks of sentences",
+        "body": "A clause is a group of words with a subject and a verb. A MAIN clause can stand alone; a SUBORDINATE clause leans on it. \"Although it rained, we went out\" — we went out is main; Although it rained is subordinate."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Types of subordinate clauses",
+        "body": "NOUN clauses act as nouns (What he said shocked us). RELATIVE (adjective) clauses describe nouns: the book THAT I read, the teacher WHO taught me. ADVERBIAL clauses tell when/why/how: because I was late, when winter comes. which/that → things, who/whom → people, when/where → time and place."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "Identify the MAIN clause: \"Although it rained, we went out.\"",
+        "options": [
+          {
+            "id": "a",
+            "text": "Although it rained"
+          },
+          {
+            "id": "b",
+            "text": "We went out"
+          },
+          {
+            "id": "c",
+            "text": "Although it"
+          },
+          {
+            "id": "d",
+            "text": "Rained we went"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "\"We went out\" is the independent clause; \"Although it rained\" is subordinate."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "\"The book that I read was gripping.\" Here \"that I read\" is a…",
+        "options": [
+          {
+            "id": "a",
+            "text": "Relative clause"
+          },
+          {
+            "id": "b",
+            "text": "Main clause"
+          },
+          {
+            "id": "c",
+            "text": "Noun phrase"
+          },
+          {
+            "id": "d",
+            "text": "Prepositional phrase"
+          }
+        ],
+        "correctOptionId": "a",
+        "explanation": "The relative clause \"that I read\" tells us which book — describing the noun."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "Which relative pronoun is correct: \"The singer ___ concert we attended was brilliant.\"",
+        "options": [
+          {
+            "id": "a",
+            "text": "who"
+          },
+          {
+            "id": "b",
+            "text": "whom"
+          },
+          {
+            "id": "c",
+            "text": "whose"
+          },
+          {
+            "id": "d",
+            "text": "which"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "\"Whose\" shows possession — the singer’s concert."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Main + subordinate clauses. Relative (which/who/whose), noun and adverbial clauses each lift a sentence."
+      }
+    ]
+  },
+  {
+    "id": "c10-en-determiners",
+    "title": "Determiners: A, Some, Much…",
+    "grade": 10,
+    "subject": "english",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Little words that point to nouns",
+        "body": "Determiners come before nouns: articles (a, an, the), demonstratives (this, these), possessives (my, your), quantifiers (some, any, much, many, few, little). They answer \"which one?\" and \"how much or how many?\"."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Choosing correctly",
+        "body": "Use A before consonant sounds and AN before vowel sounds: a book, an apple, an hour (h is silent). SOME for positive/offer, ANY for negatives and questions: I have some sugar; do you have any? MUCH for uncountable (much water), MANY for countable (many students). FEW = almost none; A FEW = some."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "___ apple a day keeps the doctor away.",
+        "options": [
+          {
+            "id": "a",
+            "text": "A"
+          },
+          {
+            "id": "b",
+            "text": "An"
+          },
+          {
+            "id": "c",
+            "text": "The"
+          },
+          {
+            "id": "d",
+            "text": "No determiner"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "\"Apple\" begins with a vowel sound → \"an apple\"."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "How ___ sugar do you need?",
+        "options": [
+          {
+            "id": "a",
+            "text": "many"
+          },
+          {
+            "id": "b",
+            "text": "much"
+          },
+          {
+            "id": "c",
+            "text": "few"
+          },
+          {
+            "id": "d",
+            "text": "several"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Sugar is uncountable → use \"much\" for amount."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "He has very ___ friends, so he feels lonely.",
+        "options": [
+          {
+            "id": "a",
+            "text": "a few"
+          },
+          {
+            "id": "b",
+            "text": "few"
+          },
+          {
+            "id": "c",
+            "text": "many"
+          },
+          {
+            "id": "d",
+            "text": "some"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "\"Few\" means almost none (a negative idea); \"a few\" means some."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "a/an/the, this/that, my/your, some/any, much/many, few/little. Vowel sounds take an; uncountable nouns take much."
+      }
+    ]
+  },
+  {
+    "id": "c10-en-tenses",
+    "title": "Tenses Review: Clauses and Time",
+    "grade": 10,
+    "subject": "english",
+    "cards": [
+      {
+        "id": "c1",
+        "type": "text",
+        "title": "Tenses in complex sentences",
+        "body": "When clauses join, tenses follow logic. Main clause past pulls dependent clauses back: He said he would come (future → would). Sequence of tenses: present → present, past → past, past → past perfect for earlier actions."
+      },
+      {
+        "id": "c2",
+        "type": "text",
+        "title": "Mixed conditionals & practice",
+        "body": "Real past + unreal present: If he had studied, he would be a doctor now. Real present + unreal past: If she were smarter, she would have solved it. Avoid mixing would into the if-clause — keep it clean."
+      },
+      {
+        "id": "c3",
+        "type": "quiz",
+        "questionId": "q1",
+        "question": "He said, \"I will finish it.\" → He said that he ___ finish it.",
+        "options": [
+          {
+            "id": "a",
+            "text": "will"
+          },
+          {
+            "id": "b",
+            "text": "would"
+          },
+          {
+            "id": "c",
+            "text": "shall"
+          },
+          {
+            "id": "d",
+            "text": "should"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Future \"will\" backsteps to \"would\" in reported speech."
+      },
+      {
+        "id": "c4",
+        "type": "quiz",
+        "questionId": "q2",
+        "question": "If I ___ (know) earlier, I would have told you.",
+        "options": [
+          {
+            "id": "a",
+            "text": "know"
+          },
+          {
+            "id": "b",
+            "text": "knew"
+          },
+          {
+            "id": "c",
+            "text": "had known"
+          },
+          {
+            "id": "d",
+            "text": "have known"
+          }
+        ],
+        "correctOptionId": "c",
+        "explanation": "Third conditional (unreal past): if + past perfect."
+      },
+      {
+        "id": "c5",
+        "type": "quiz",
+        "questionId": "q3",
+        "question": "If she were taller, she ___ reach the shelf.",
+        "options": [
+          {
+            "id": "a",
+            "text": "can"
+          },
+          {
+            "id": "b",
+            "text": "could"
+          },
+          {
+            "id": "c",
+            "text": "will"
+          },
+          {
+            "id": "d",
+            "text": "would"
+          }
+        ],
+        "correctOptionId": "b",
+        "explanation": "Second conditional (unreal present): if + past, would/could + base."
+      },
+      {
+        "id": "c6",
+        "type": "summary",
+        "title": "🌟",
+        "body": "Reported speech backsteps tenses. Mixed conditionals combine real and unreal times — keep would out of the if-clause."
+      }
+    ]
+  }
+]

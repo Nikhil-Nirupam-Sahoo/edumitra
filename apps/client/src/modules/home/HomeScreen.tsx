@@ -61,28 +61,49 @@ export function HomeScreen({
   const [selectedStudentId, setSelectedStudentId] = useState(studentId);
   const { state, status } = useGamification(selectedStudentId);
   const [burst, setBurst] = useState<{ xp: number; combo: number; key: number; x: number; y: number } | null>(null);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const [activeTab, setActiveTab] = useState<SyllabusGradeId | 'practice'>(() => {
     const grade = classIdToGrade(classId);
     return (grade as SyllabusGradeId) ?? 'practice';
   });
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
-      const [allLessons, allStudents, allProgress] = await Promise.all([
-        getLessons(),
-        getAllStudents(),
-        getAllProgress(),
-      ]);
-      setLessons(allLessons);
-      setStudents(allStudents);
-      const progMap = new Map<string, StudentProgressRecord>();
-      for (const p of allProgress) {
-        progMap.set(`${p.student_id}::${p.lesson_id}`, p);
+      // Never let a failed read look like "this class has no lessons".
+      setLoadState('loading');
+      setLoadError(null);
+      try {
+        const [allLessons, allStudents, allProgress] = await Promise.all([
+          getLessons(),
+          getAllStudents(),
+          getAllProgress(),
+        ]);
+        if (cancelled) return;
+        setLessons(allLessons);
+        setStudents(allStudents);
+        const progMap = new Map<string, StudentProgressRecord>();
+        for (const p of allProgress) {
+          progMap.set(`${p.student_id}::${p.lesson_id}`, p);
+        }
+        setProgressMap(progMap);
+        setLoadState('ready');
+      } catch (error) {
+        if (cancelled) return;
+        console.error('[home] failed to load lessons', error);
+        setLoadError(error instanceof Error ? error.message : String(error));
+        setLoadState('error');
       }
-      setProgressMap(progMap);
     }
-    load();
-  }, []);
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadToken]);
 
   const filteredLessons = useMemo(() => {
     if (activeTab === 'practice') {
@@ -155,7 +176,36 @@ export function HomeScreen({
         ))}
       </nav>
 
-      <main className="home-main">
+      <main className="home-main" aria-busy={loadState === 'loading'}>
+        {loadState === 'loading' && <p className="muted">{t('common.loading')}</p>}
+
+        {loadState === 'error' && (
+          <div className="home-load-error" role="alert">
+            <p>{t('lesson.no_lessons')}</p>
+            <p className="muted mono">{loadError}</p>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setReloadToken((n) => n + 1)}
+            >
+              {t('common.retry')}
+            </button>
+          </div>
+        )}
+
+        {loadState === 'ready' && subjectGroups.length === 0 && (
+          <div className="home-load-error" role="status">
+            <p>{t('lesson.no_lessons')}</p>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setReloadToken((n) => n + 1)}
+            >
+              {t('common.retry')}
+            </button>
+          </div>
+        )}
+
         {subjectGroups.map((group) => (
           <section key={group.subject} className="subject-section" aria-labelledby={`subject-${group.subject}`}>
             <h2 id={`subject-${group.subject}`} className="subject-title">

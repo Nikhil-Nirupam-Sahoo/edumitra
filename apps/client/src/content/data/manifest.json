@@ -1,0 +1,306 @@
+{
+  "schema": 1,
+  "contentVersion": 1,
+  "description": "EduMitra syllabus content manifest. Each entry is one lesson bundled with the app for offline use; bumping contentVersion makes the seed refresh existing installs.",
+  "files": {
+    "class8": "./data/class8.json",
+    "class9": "./data/class9.json",
+    "class10": "./data/class10.json"
+  },
+  "counts": {
+    "class8": 12,
+    "class9": 12,
+    "class10": 12,
+    "total": 36
+  },
+  "lessons": [
+    {
+      "id": "c8-math-rational-numbers",
+      "grade": 8,
+      "subject": "math",
+      "title": "Rational Numbers",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-math-linear-equations",
+      "grade": 8,
+      "subject": "math",
+      "title": "Linear Equations in One Variable",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-math-mensuration",
+      "grade": 8,
+      "subject": "math",
+      "title": "Mensuration: Area & Volume",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-sci-force-pressure",
+      "grade": 8,
+      "subject": "science",
+      "title": "Force and Pressure",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-sci-combustion-flame",
+      "grade": 8,
+      "subject": "science",
+      "title": "Combustion and Flame",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-sci-microorganisms",
+      "grade": 8,
+      "subject": "science",
+      "title": "Microorganisms: Friends and Foes",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-sst-resources",
+      "grade": 8,
+      "subject": "sst",
+      "title": "Resources",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-sst-agriculture",
+      "grade": 8,
+      "subject": "sst",
+      "title": "Agriculture",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-sst-constitution",
+      "grade": 8,
+      "subject": "sst",
+      "title": "The Indian Constitution",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-en-tenses",
+      "grade": 8,
+      "subject": "english",
+      "title": "Tenses: When Things Happen",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-en-active-passive",
+      "grade": 8,
+      "subject": "english",
+      "title": "Active and Passive Voice",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c8-en-comprehension",
+      "grade": 8,
+      "subject": "english",
+      "title": "Reading Comprehension",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-math-polynomials",
+      "grade": 9,
+      "subject": "math",
+      "title": "Polynomials",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-math-number-systems",
+      "grade": 9,
+      "subject": "math",
+      "title": "Number Systems",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-math-lines-angles",
+      "grade": 9,
+      "subject": "math",
+      "title": "Lines and Angles",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-sci-matter-surroundings",
+      "grade": 9,
+      "subject": "science",
+      "title": "Matter in Our Surroundings",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-sci-motion",
+      "grade": 9,
+      "subject": "science",
+      "title": "Motion",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-sci-atoms-molecules",
+      "grade": 9,
+      "subject": "science",
+      "title": "Atoms and Molecules",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-sst-democracy",
+      "grade": 9,
+      "subject": "sst",
+      "title": "Democracy: What and Why",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-sst-climate",
+      "grade": 9,
+      "subject": "sst",
+      "title": "Climate of India",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-sst-food-security",
+      "grade": 9,
+      "subject": "sst",
+      "title": "Food Security in India",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-en-reported-speech",
+      "grade": 9,
+      "subject": "english",
+      "title": "Reported Speech",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-en-conditionals",
+      "grade": 9,
+      "subject": "english",
+      "title": "Conditional Sentences",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c9-en-passive-voice",
+      "grade": 9,
+      "subject": "english",
+      "title": "Active and Passive Voice",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-math-real-numbers",
+      "grade": 10,
+      "subject": "math",
+      "title": "Real Numbers",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-math-quadratic-equations",
+      "grade": 10,
+      "subject": "math",
+      "title": "Quadratic Equations",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-math-trigonometry",
+      "grade": 10,
+      "subject": "math",
+      "title": "Introduction to Trigonometry",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-sci-chemical-reactions",
+      "grade": 10,
+      "subject": "science",
+      "title": "Chemical Reactions & Equations",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-sci-life-processes",
+      "grade": 10,
+      "subject": "science",
+      "title": "Life Processes",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-sci-light",
+      "grade": 10,
+      "subject": "science",
+      "title": "Light: Reflection & Refraction",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-sst-development",
+      "grade": 10,
+      "subject": "sst",
+      "title": "Development",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-sst-sectors-economy",
+      "grade": 10,
+      "subject": "sst",
+      "title": "Sectors of the Indian Economy",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-sst-federalism",
+      "grade": 10,
+      "subject": "sst",
+      "title": "Federalism",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-en-clauses",
+      "grade": 10,
+      "subject": "english",
+      "title": "Clauses",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-en-determiners",
+      "grade": 10,
+      "subject": "english",
+      "title": "Determiners: A, Some, Much…",
+      "cards": 6,
+      "quizzes": 3
+    },
+    {
+      "id": "c10-en-tenses",
+      "grade": 10,
+      "subject": "english",
+      "title": "Tenses Review: Clauses and Time",
+      "cards": 6,
+      "quizzes": 3
+    }
+  ]
+}

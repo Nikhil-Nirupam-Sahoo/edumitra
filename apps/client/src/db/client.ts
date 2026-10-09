@@ -83,7 +83,14 @@ export function openDb(): Promise<IDBDatabase> {
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('Failed to open local database'));
-    request.onblocked = () => reject(new Error('Local database upgrade blocked by another tab'));
+    // A version upgrade can be BLOCKED while another tab still holds an old
+    // connection open. Rejecting here would poison `dbPromise` permanently —
+    // every later read on the device would fail and the UI would look like it
+    // had no lessons. Instead keep waiting: the other tab eventually closes
+    // or upgrades, and this request then completes normally.
+    request.onblocked = () => {
+      console.warn('[db] version upgrade blocked by another tab — waiting for it to close');
+    };
   });
   return dbPromise;
 }

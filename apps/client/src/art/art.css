@@ -202,3 +202,20 @@
   color: var(--vc-neon-cyan);
   text-shadow: var(--neon-glow-cyan);
 }
+
+/* ---- Home: loading / error / empty states ---- */
+.home-load-error {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border: 1px dashed rgba(255, 209, 102, 0.5);
+  border-radius: var(--radius);
+  background: rgba(12, 4, 34, 0.6);
+}
+.home-load-error .mono {
+  word-break: break-word;
+  opacity: 0.7;
+  margin: 0.4rem 0 0.8rem;
+}
+.home-load-error .btn {
+  margin: 0 auto;
+}

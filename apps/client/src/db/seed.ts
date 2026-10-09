@@ -1,39 +1,56 @@
 /**
- * Seed content — ships with the app build so a freshly installed device has
- * lessons WITHOUT any network access. In production this is replaced by the
- * delta lesson downloader (`content.json` → upsertLessons); the seeding path
- * is identical, which keeps the demo honest.
+ * Seed content — puts the syllabus on the device without any network access.
  *
- * Media references point at /media/ (WebP + short compressed audio). The seed
- * lessons intentionally use tiny inline SVG data-URI images so the demo works
- * with zero downloaded assets.
+ * The curriculum itself is DATA (`content/data/*.json`, described by its
+ * manifest); this file only decides *when* to write it and with what version.
+ *
+ * Seeding is idempotent and incremental:
+ *  - a fresh install gets every lesson;
+ *  - an existing install only receives lessons that are missing, or whose
+ *    bundled `contentVersion` is newer than the copy already on the device;
+ *  - pre-existing (pre-syllabus) lessons are left untouched and shown under
+ *    the Practice tab.
  */
 
-import { upsertLessons, upsertStudents } from '../db/client';
+import { getLessons, getAllStudents, upsertLessons, upsertStudents } from '../db/client';
 import type { LessonRecord, StudentRecord } from '../db/schema';
-import { CLASS_8_LESSONS } from '../content/class8';
-import { CLASS_9_LESSONS } from '../content/class9';
-import { CLASS_10_LESSONS } from '../content/class10';
-import { toLessonRecord, type SeedLesson } from '../content/types';
+import {
+  CONTENT_VERSION,
+  loadSyllabusLessons,
+  validateSyllabusLesson,
+  type SeedLesson,
+} from '../content';
 
-const SYLLABUS_LESSONS: SeedLesson[] = [
-  ...CLASS_8_LESSONS,
-  ...CLASS_9_LESSONS,
-  ...CLASS_10_LESSONS,
-];
+const SUBJECT_IDS = ['math', 'science', 'sst', 'english', 'practice'] as const;
+const GRADE_IDS = [8, 9, 10] as const;
 
-function syllabusSeedVersion(): number {
-  return 1;
+/** Convert one JSON lesson into a DB record (content serialized). */
+export function toLessonRecord(seed: SeedLesson, contentVersion: number, updatedAt: number): LessonRecord {
+  validateSyllabusLesson(seed.cards);
+  const grade = (GRADE_IDS as readonly number[]).includes(seed.grade) ? (seed.grade as 8 | 9 | 10) : undefined;
+  const subject = (SUBJECT_IDS as readonly string[]).includes(seed.subject)
+    ? (seed.subject as (typeof SUBJECT_IDS)[number])
+    : 'practice';
+  return {
+    id: seed.id,
+    title: seed.title,
+    language: 'en',
+    version: contentVersion,
+    content_json: JSON.stringify({
+      version: contentVersion,
+      language: 'en',
+      cards: seed.cards,
+    }),
+    updated_at: updatedAt,
+    grade,
+    subject,
+  };
 }
 
-function syllabusIds(): string[] {
-  return SYLLABUS_LESSONS.map((l) => l.id);
-}
-
+/** Every bundled syllabus lesson, as DB records. */
 export function buildSeedLessons(): LessonRecord[] {
   const now = Date.now();
-  const ver = syllabusSeedVersion();
-  return SYLLABUS_LESSONS.map((seed) => toLessonRecord(seed, ver, now));
+  return loadSyllabusLessons().map((seed) => toLessonRecord(seed, CONTENT_VERSION, now));
 }
 
 export function buildSeedStudents(): StudentRecord[] {
@@ -50,17 +67,21 @@ export function buildSeedStudents(): StudentRecord[] {
 
 /** Idempotent: safe to call on every app start. */
 export async function seedIfEmpty(): Promise<void> {
-  const { getLessons, getAllStudents } = await import('../db/client');
   const [lessons, students] = await Promise.all([getLessons(), getAllStudents()]);
   const writes: Promise<void>[] = [];
 
-  // Always ensure syllabus lessons are present (missing ones get upserted)
-  const present = new Set(lessons.map((l) => l.id));
-  const missing = SYLLABUS_LESSONS.filter((l) => !present.has(l.id));
+  // Only write what this device is missing or has at an older content version.
+  const present = new Map(lessons.map((lesson) => [lesson.id, lesson.version]));
+  const now = Date.now();
+  const missing = loadSyllabusLessons()
+    .filter((seed) => {
+      const installed = present.get(seed.id);
+      return installed === undefined || installed < CONTENT_VERSION;
+    })
+    .map((seed) => toLessonRecord(seed, CONTENT_VERSION, now));
+
   if (missing.length > 0) {
-    const ver = syllabusSeedVersion();
-    const records = missing.map((seed) => toLessonRecord(seed, ver, Date.now()));
-    writes.push(upsertLessons(records));
+    writes.push(upsertLessons(missing));
   }
 
   if (students.length === 0) {
