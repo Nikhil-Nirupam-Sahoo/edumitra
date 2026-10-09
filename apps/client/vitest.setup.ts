@@ -1,5 +1,47 @@
 import 'fake-indexeddb/auto';
 
+// Node >= 22 installs a configurable `localStorage` getter on globalThis that
+// returns undefined (the experimental storage needs --localstorage-file). In the
+// jsdom environment that getter shadows the real window.localStorage, so
+// `localStorage.clear()` blows up in any test that touches it. Replace it with
+// a small in-memory Storage so tests are deterministic and storage-dependent
+// code (locale, cached auth session, remote translations) is genuinely exercised.
+function installMemoryStorage(name: 'localStorage' | 'sessionStorage'): void {
+  const map = new Map<string, string>();
+  const shim: Storage = {
+    get length() {
+      return map.size;
+    },
+    key(index: number): string | null {
+      return [...map.keys()][index] ?? null;
+    },
+    getItem(key: string): string | null {
+      return map.has(key) ? (map.get(key) as string) : null;
+    },
+    setItem(key: string, value: string): void {
+      map.set(key, String(value));
+    },
+    removeItem(key: string): void {
+      map.delete(key);
+    },
+    clear(): void {
+      map.clear();
+    },
+  };
+  Object.defineProperty(globalThis, name, {
+    value: shim,
+    configurable: true,
+    writable: true,
+  });
+}
+
+if (typeof globalThis.localStorage === 'undefined' || globalThis.localStorage === null) {
+  installMemoryStorage('localStorage');
+}
+if (typeof globalThis.sessionStorage === 'undefined' || globalThis.sessionStorage === null) {
+  installMemoryStorage('sessionStorage');
+}
+
 // jsdom lacks a couple of browser APIs the client relies on. Provide minimal,
 // deterministic stand-ins so unit tests exercise real logic paths.
 if (!('CompressionStream' in globalThis)) {

@@ -20,6 +20,9 @@ import { SettingsPanel } from './modules/settings/SettingsPanel';
 import { getSyncEngine } from './sync/syncEngine';
 import { HomeScreen } from './modules/home/HomeScreen';
 import { restoreRemoteLocales } from './i18n/remote';
+import { useAuth } from './auth/client';
+import { LoginScreen } from './auth/LoginScreen';
+import { SessionBar } from './auth/SessionBar';
 import { RewardsPanel } from './modules/rewards/RewardsPanel';
 import { resetGamificationStore } from './gamification/store';
 
@@ -62,6 +65,7 @@ export function App() {
   );
   const [ready, setReady] = useState(false);
   const [studentId, setStudentId] = useState('student-aarav');
+  const auth = useAuth();
   const { t } = useMemo(() => createTranslator(locale), [locale]);
 
   /**
@@ -166,18 +170,46 @@ export function App() {
   const currentStudent = students.find((s) => s.id === studentId);
   const currentClassId = currentStudent?.class_id ?? 'class-8-a';
 
+  // ---- Roles -------------------------------------------------------------
+  // A teacher lands on the class dashboard; a student learns. The active
+  // student id follows whoever is signed in, so a student's own progress and
+  // gamification are the ones shown.
+  const signedInStudentId = auth.state.status === 'signed-in' ? auth.state.user.id : studentId;
+
+  const visibleRoutes = useMemo<Route['name'][]>(() => {
+    if (!auth.isTeacher) return ['home', 'lesson', 'rewards', 'settings'];
+    return ['teacher', 'settings'];
+  }, [auth.isTeacher]);
+
+  useEffect(() => {
+    // Keep the URL honest: a student who deep-links to the dashboard is sent home.
+    if (auth.state.status === 'signed-in' && !visibleRoutes.includes(route.name)) {
+      navigate(auth.isTeacher ? { name: 'teacher' } : { name: 'home' });
+    }
+  }, [auth.state.status, auth.isTeacher, route.name, visibleRoutes]);
+
+  if (auth.state.status === 'signed-out') {
+    return <LoginScreen auth={auth} />;
+  }
+
   return (
     <div className="app">
       <div className={`connectivity-bar ${online ? 'online' : 'offline'}`} role="status">
         {online ? `● ${t('common.online')}` : `◌ ${t('common.offline')}`}
       </div>
 
+      <SessionBar
+        user={auth.state.user}
+        onSignOut={auth.signOut}
+        locale={locale}
+      />
+
       {!ready ? (
         <p className="muted boot-loading">{t('common.loading')}</p>
       ) : route.name === 'lesson' ? (
         <LessonViewer
           lessonId={route.lessonId}
-          studentId={studentId}
+          studentId={signedInStudentId}
           locale={locale}
           onExit={() => navigate({ name: 'home' })}
         />
@@ -194,8 +226,8 @@ export function App() {
         />
       ) : route.name === 'rewards' ? (
         <RewardsPanel
-          studentId={studentId}
-          studentName={currentStudent?.name ?? 'Student'}
+          studentId={signedInStudentId}
+          studentName={auth.state.status === 'signed-in' ? auth.state.user.displayName : 'Student'}
           locale={locale}
           classId={currentClassId}
           onClose={() => navigate({ name: 'home' })}
@@ -203,35 +235,40 @@ export function App() {
       ) : (
         <HomeScreen
           locale={locale}
-          studentId={studentId}
-          studentName={currentStudent?.name ?? 'Student'}
+          studentId={signedInStudentId}
+          studentName={auth.state.status === 'signed-in' ? auth.state.user.displayName : 'Student'}
           classId={currentClassId}
           onLessonSelect={(lessonId) => navigate({ name: 'lesson', lessonId })}
         />
       )}
 
       <nav className="bottom-nav" aria-label="Primary">
-        <button
-          type="button"
-          className={route.name === 'home' || route.name === 'lesson' ? 'active' : ''}
-          onClick={() => navigate({ name: 'home' })}
-        >
-          📚 {t('nav.lessons')}
-        </button>
-        <button
-          type="button"
-          className={route.name === 'rewards' ? 'active' : ''}
-          onClick={() => navigate({ name: 'rewards' })}
-        >
-          🏆 {t('nav.rewards')}
-        </button>
-        <button
-          type="button"
-          className={route.name === 'teacher' ? 'active' : ''}
-          onClick={() => navigate({ name: 'teacher' })}
-        >
-          📊 {t('nav.dashboard')}
-        </button>
+        {auth.isTeacher ? (
+          <button
+            type="button"
+            className={route.name === 'teacher' ? 'active' : ''}
+            onClick={() => navigate({ name: 'teacher' })}
+          >
+            📊 {t('dashboard.title')}
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              className={route.name === 'home' || route.name === 'lesson' ? 'active' : ''}
+              onClick={() => navigate({ name: 'home' })}
+            >
+              📚 {t('nav.lessons')}
+            </button>
+            <button
+              type="button"
+              className={route.name === 'rewards' ? 'active' : ''}
+              onClick={() => navigate({ name: 'rewards' })}
+            >
+              🏆 {t('nav.rewards')}
+            </button>
+          </>
+        )}
         <button
           type="button"
           className={route.name === 'settings' ? 'active' : ''}

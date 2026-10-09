@@ -19,6 +19,8 @@ import type { DbPort } from './db/index.js';
 import { registerSyncRoutes } from './sync/sync.controller.js';
 import { registerTranslateRoutes } from './translate/translate.controller.js';
 import { registerContentRoutes } from './content/content.controller.js';
+import { AuthService } from './auth/auth.service.js';
+import { registerAuthRoutes } from './auth/auth.controller.js';
 import type { JobQueue, SyncJob } from './sync/queue.js';
 import type { SyncService } from './sync/sync.service.js';
 
@@ -34,10 +36,14 @@ export interface BuildAppOptions {
   db: DbPort;
   syncService: SyncService;
   queue: JobQueue;
+  /** Optional; built from the signing secret when omitted. */
+  auth?: AuthService;
 }
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const { config, syncService, queue } = options;
+  const auth =
+    options.auth ?? new AuthService(options.db, config.sync.signingSecret);
 
   const app = Fastify({
     logger: config.isTest
@@ -110,6 +116,18 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (instance) => {
       await registerTranslateRoutes(instance, { config });
+    },
+    { prefix: '/api/v1' },
+  );
+
+  // ---------------------------------------------------------------------
+  // Auth & roles — /auth/me and the role-gated /auth/whoami-* probes.
+  // Registered before content so the onRequest hook that populates
+  // request.auth is in place for everything after it.
+  // ---------------------------------------------------------------------
+  await app.register(
+    async (instance) => {
+      await registerAuthRoutes(instance, { auth });
     },
     { prefix: '/api/v1' },
   );

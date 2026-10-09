@@ -10,6 +10,7 @@ import { loadConfig } from './config.js';
 import { createDatabase } from './db/index.js';
 import { createJobQueue } from './sync/queue.js';
 import { SyncService } from './sync/sync.service.js';
+import { AuthService } from './auth/auth.service.js';
 
 const RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -18,7 +19,14 @@ async function main(): Promise<void> {
   const db = await createDatabase(config);
   const syncService = new SyncService(db, config);
   const queue = await createJobQueue(config);
-  const app = await buildApp({ config, db, syncService, queue });
+  const auth = new AuthService(db, config.sync.signingSecret);
+  // Demo accounts so the app is usable straight after deploy. Existing
+  // accounts are never overwritten, so real sign-ups survive a redeploy.
+  const created = await auth.ensureDemoUsers();
+  if (created > 0) {
+    console.log(`[auth] created ${created} demo user(s)`);
+  }
+  const app = await buildApp({ config, db, syncService, queue, auth });
 
   await queue.start(
     createJobHandler({

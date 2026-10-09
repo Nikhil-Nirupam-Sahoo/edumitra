@@ -327,3 +327,164 @@
     animation: none !important;
   }
 }
+
+/* ==========================================================================
+   AUTH — login screen & session bar
+   ========================================================================== */
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: linear-gradient(165deg, rgba(28, 12, 66, 0.94), rgba(12, 4, 34, 0.96));
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  border-radius: var(--radius);
+  box-shadow: 0 0 40px rgba(245, 0, 125, 0.35), 0 20px 50px rgba(0, 0, 0, 0.55);
+  padding: 1.5rem 1.25rem 1.25rem;
+}
+
+.login-title {
+  margin: 0;
+  text-align: center;
+  font-size: 2rem;
+}
+.login-subtitle {
+  margin: 0.25rem 0 1.1rem;
+  text-align: center;
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+  font-size: 0.9rem;
+}
+
+.login-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.login-field {
+  display: grid;
+  gap: 0.3rem;
+}
+.login-field > span {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+.login-field input {
+  font: inherit;
+  padding: 0.7rem 0.8rem;
+  min-height: 46px;
+  border-radius: var(--radius-sm);
+  background: rgba(6, 2, 20, 0.75);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: var(--color-text);
+}
+.login-field input:focus {
+  outline: none;
+  border-color: var(--vc-neon-pink);
+  box-shadow: var(--neon-glow-pink);
+}
+.login-field input::placeholder {
+  color: rgba(185, 169, 232, 0.55);
+}
+
+.login-error {
+  margin: 0;
+  color: var(--color-danger);
+  text-shadow: 0 0 10px rgba(255, 77, 109, 0.6);
+  font-size: 0.85rem;
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.login-demo {
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(0, 229, 255, 0.2);
+}
+.login-demo-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+.login-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.4rem;
+}
+.login-demo-chip {
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: rgba(0, 229, 255, 0.07);
+  border: 1px solid rgba(0, 229, 255, 0.28);
+  color: var(--color-text);
+  transition: all 0.15s ease;
+}
+.login-demo-chip:hover {
+  background: rgba(0, 229, 255, 0.16);
+  box-shadow: var(--neon-glow-cyan);
+}
+.login-demo-emoji {
+  font-size: 1rem;
+}
+
+/* ---- Session bar ---- */
+.session-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  box-shadow: var(--shadow);
+}
+.session-avatar {
+  font-size: 1.35rem;
+  filter: drop-shadow(0 0 8px rgba(255, 45, 149, 0.6));
+}
+.session-info {
+  display: grid;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+.session-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.session-role {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+.session-role-teacher {
+  color: var(--vc-neon-pink);
+  text-shadow: var(--neon-glow-pink);
+}
+.session-role-student {
+  color: var(--vc-neon-cyan);
+  text-shadow: var(--neon-glow-cyan);
+}
+.session-signout {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  min-height: 36px;
+}
